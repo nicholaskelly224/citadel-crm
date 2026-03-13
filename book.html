@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citadel Secure — Request a Booking</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f5c518">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Citadel">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #1a1e2e;
+      --surface:  #232840;
+      --surface2: #2c3145;
+      --border:   rgba(255,255,255,0.08);
+      --border2:  rgba(255,255,255,0.12);
+      --gold:     #f5c518;
+      --text:     #c8cde0;
+      --muted:    #6b7494;
+      --danger:   #ef4444;
+      --green:    #00e676;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: #f0f4ff;
+    }
+    .logo span { color: var(--gold); }
+    .logo-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 3px;
+      margin-top: 2px;
+    }
+
+    /* Hero banner */
+    .hero {
+      background: linear-gradient(135deg, #1a1e2e 0%, #2c3145 60%, #1e2438 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 28px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(245,197,24,0.1) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(245,197,24,0.02) 40px,rgba(245,197,24,0.02) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(245,197,24,0.02) 40px,rgba(245,197,24,0.02) 41px);
+      pointer-events: none;
+    }
+    .hero-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #f0f4ff;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-title span { color: var(--gold); }
+    .hero-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 0 auto 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-desc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #8a94b8;
+      letter-spacing: 1px;
+      line-height: 1.8;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 24px 20px 0;
+    }
+
+    .page-sub {
+      display: none;
+    }
+    .page-title {
+      display: none;
+    }
+
+    /* Sections */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-top: 2px solid var(--gold);
+      padding: 22px 22px 20px;
+      margin-bottom: 16px;
+    }
+    .section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+    }
+
+    /* Fields */
+    .field { margin-bottom: 14px; }
+    .field-row { display: grid; gap: 14px; margin-bottom: 14px; }
+    .field-row.two { grid-template-columns: 1fr 1fr; }
+    .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    @media (max-width: 520px) {
+      .field-row.two, .field-row.three { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    label .req { color: var(--danger); }
+
+    input:not([type=radio]):not([type=checkbox]), select, textarea {
+      width: 100%;
+      background: #1a1e2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+    input:not([type=radio]):not([type=checkbox]):focus, select:focus, textarea:focus {
+      border-color: rgba(245,197,24,0.5);
+    }
+    input::placeholder, textarea::placeholder { color: var(--muted); font-size: 12px; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    input[type=radio], input[type=checkbox] {
+      width: 16px; height: 16px;
+      accent-color: var(--gold);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Radio / checkbox groups */
+    .opt-group { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+    .opt {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: border-color 0.15s;
+      user-select: none;
+    }
+    .opt:hover { border-color: rgba(245,197,24,0.3); }
+    .build-opt.active { border-color: #f5c518 !important; color: #f5c518 !important; }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--gold);
+      color: #1a1e2e;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      border: none;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+    }
+    .submit-btn:hover { opacity: 0.9; }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Success screen */
+    #success-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    /* REVIEW SCREEN */
+    #review-screen {
+      display: none;
+      padding: 0 0 40px;
+    }
+    .review-header {
+      background: rgba(245,197,24,0.08);
+      border: 1px solid rgba(245,197,24,0.3);
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .review-header-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+    }
+    .review-header-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .review-section {
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .review-section-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .review-row {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .review-row.full { grid-column: span 2; }
+    .review-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+    .review-value {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .review-value.gold { color: var(--gold); }
+    .review-value.empty { color: rgba(255,255,255,0.2); font-style: italic; font-size: 11px; }
+    .review-risk-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 12px;
+    }
+    .risk-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      letter-spacing: 1px;
+    }
+    .risk-unknown { background:rgba(107,116,148,0.2); color:#6b7494; }
+    .risk-unlikely { background:rgba(0,230,118,0.12); color:#00e676; }
+    .risk-possible { background:rgba(255,214,0,0.12); color:#ffd600; }
+    .risk-likely { background:rgba(255,152,0,0.12); color:#ff9800; }
+    .risk-highlikely { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .review-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-back {
+      flex: 1;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .btn-back:hover { border-color: rgba(255,255,255,0.3); color: var(--text); }
+    .btn-confirm {
+      flex: 2;
+      background: var(--gold);
+      border: none;
+      color: #1a1e2e;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 14px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-confirm:hover { opacity: 0.9; }
+    .btn-confirm:disabled { opacity: 0.5; cursor: default; }
+    .success-icon {
+      font-size: 56px;
+      margin-bottom: 18px;
+    }
+    .success-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--green);
+      margin-bottom: 10px;
+    }
+    .success-ref {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--gold);
+      margin-bottom: 14px;
+      letter-spacing: 1px;
+    }
+    .success-msg {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* Error */
+    .err { color: var(--danger); font-size: 11px; font-family: 'Share Tech Mono', monospace; margin-top: 4px; display: none; }
+
+    /* Notice */
+    .notice {
+      background: rgba(245,197,24,0.07);
+      border: 1px solid rgba(245,197,24,0.2);
+      padding: 12px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 1px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    /* Risk table */
+    .risk-table { width: 100%; border-collapse: collapse; font-family: 'Share Tech Mono', monospace; font-size: 11px; }
+    .risk-table th {
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    .risk-table th:first-child { text-align: left; }
+    .risk-table td {
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+      vertical-align: middle;
+      color: var(--text);
+    }
+    .risk-table td:first-child { text-align: left; font-size: 12px; }
+    .risk-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .risk-table input[type=radio] { cursor: pointer; }
+
+    /* Risk level colour hints in header */
+    .rh-unlikely   { color: #00e676; }
+    .rh-possible   { color: #f5c518; }
+    .rh-likely     { color: #f97316; }
+    .rh-highlikely { color: #ef4444; }
+    .rh-unknown    { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">CITADEL<span>SECURE</span></div>
+    <div class="logo-sub">SECURE PATIENT TRANSPORT</div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">CITADEL<span>SECURE</span></div>
+  <div class="hero-sub">SECURE PATIENT TRANSPORT — BOOKING REQUEST</div>
+  <div class="hero-divider"></div>
+  <div class="hero-desc">
+    COMPLETE THE FORM BELOW AND OUR TEAM WILL CONFIRM YOUR BOOKING.<br>
+    FOR URGENT REQUESTS PLEASE CALL US DIRECTLY.
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- BOOKING FORM -->
+  <div id="booking-form">
+    <div class="notice">
+      ALL FIELDS MARKED WITH * ARE REQUIRED. BOOKINGS ARE SUBJECT TO AVAILABILITY AND TEAM CONFIRMATION.
+    </div>
+
+    <!-- YOUR DETAILS -->
+    <div class="section">
+      <div class="section-label">YOUR DETAILS</div>
+      <div class="field-row two">
+        <div class="field">
+          <label>Your Name <span class="req">*</span></label>
+          <input id="b-name" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Your Job Title / Role</label>
+          <input id="b-role" placeholder="e.g. Ward Manager">
+        </div>
+      </div>
+      <div class="field-row two">
+        <div class="field">
+          <label>Organisation / Hospital <span class="req">*</span></label>
+          <input id="b-org" placeholder="Hospital, Trust or Authority">
+        </div>
+        <div class="field">
+          <label>Contact Number <span class="req">*</span></label>
+          <input id="b-tel" type="tel" placeholder="Direct line or mobile">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input id="b-email" type="email" placeholder="your.name@nhs.uk">
+      </div>
+    </div>
+
+    <!-- TASK DETAILS -->
+    <div class="section">
+      <div class="section-label">TASK DETAILS</div>
+      <div class="field">
+        <label>Type of Transport <span class="req">*</span></label>
+        <div class="opt-group">
+          <label class="opt"><input type="radio" name="b-type" value="Transfer" checked> Patient Transfer</label>
+          <label class="opt"><input type="radio" name="b-type" value="Bed Watch"> Bed Watch</label>
+          <label class="opt"><input type="radio" name="b-type" value="Other"> Other</label>
+        </div>
+      </div>
+      <div class="field" id="b-other-wrap" style="display:none">
+        <label>Please specify</label>
+        <input id="b-other" placeholder="Describe the type of task">
+      </div>
+      <div class="field-row two">
+        <div class="field">
+          <label>Preferred Date & Time <span class="req">*</span></label>
+          <input id="b-due" type="datetime-local">
+        </div>
+        <div class="field">
+          <label>Reason for Transport</label>
+          <input id="b-reason" placeholder="e.g. Section 3 MHA, voluntary admission...">
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCATIONS -->
+    <div class="section">
+      <div class="section-label">LOCATIONS</div>
+      <div class="field-row two">
+        <div class="field">
+          <label>Collecting From — Hospital / Facility <span class="req">*</span></label>
+          <input id="b-from-hosp" placeholder="Hospital or facility name">
+        </div>
+        <div class="field">
+          <label>Ward / Unit</label>
+          <input id="b-from-ward" placeholder="Ward or unit name">
+        </div>
+      </div>
+      <div class="field-row two">
+        <div class="field">
+          <label>Conveying To — Hospital / Facility <span class="req">*</span></label>
+          <input id="b-to-hosp" placeholder="Destination name">
+        </div>
+        <div class="field">
+          <label>Ward / Unit</label>
+          <input id="b-to-ward" placeholder="Ward or unit name">
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENT INFORMATION -->
+    <div class="section">
+      <div class="section-label">PATIENT INFORMATION</div>
+
+      <div class="field-row two" style="margin-bottom:14px">
+        <div class="field" style="grid-column:span 2">
+          <label>Patient Full Name <span class="req">*</span></label>
+          <input id="b-su-name" placeholder="Full legal name">
+        </div>
+      </div>
+
+      <div class="field-row" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-bottom:14px">
+        <div class="field">
+          <label>Gender</label>
+          <select id="b-su-gender">
+            <option value="">— Select —</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+            <option>Unknown</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nationality</label>
+          <input id="b-su-nationality" placeholder="Nationality">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input id="b-su-dob" type="date" onchange="calcBookingAge(this.value)">
+        </div>
+        <div class="field">
+          <label>Age <span style="color:#00e676;font-size:9px">AUTO</span></label>
+          <input id="b-su-age" placeholder="—" readonly style="color:#f5c518;cursor:default;opacity:0.8">
+        </div>
+      </div>
+
+      <div class="field-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:14px">
+        <div class="field">
+          <label>NHS / Hospital Number</label>
+          <input id="b-su-nhs" placeholder="NHS or hospital number">
+        </div>
+        <div class="field">
+          <label>Build Type</label>
+          <div class="opt-group" style="gap:6px;padding-top:6px" id="build-btns">
+            <label class="opt build-opt" style="padding:6px 14px"><input type="radio" name="b-build" value="Slim" style="display:none"> Slim</label>
+            <label class="opt build-opt" style="padding:6px 14px"><input type="radio" name="b-build" value="Medium" style="display:none"> Medium</label>
+            <label class="opt build-opt" style="padding:6px 14px"><input type="radio" name="b-build" value="Large" style="display:none"> Large</label>
+            <label class="opt build-opt" style="padding:6px 14px"><input type="radio" name="b-build" value="Bariatric" style="display:none"> Bariatric</label>
+          </div>
+          <input type="hidden" id="b-su-build">
+        </div>
+        <div class="field">
+          <label>Height</label>
+          <select id="b-su-height">
+            <option value="">— Select Height —</option>
+            <option>4'0"</option><option>4'1"</option><option>4'2"</option><option>4'3"</option><option>4'4"</option><option>4'5"</option><option>4'6"</option><option>4'7"</option><option>4'8"</option><option>4'9"</option><option>4'10"</option><option>4'11"</option>
+            <option>5'0"</option><option>5'1"</option><option>5'2"</option><option>5'3"</option><option>5'4"</option><option>5'5"</option><option>5'6"</option><option>5'7"</option><option>5'8"</option><option>5'9"</option><option>5'10"</option><option>5'11"</option>
+            <option>6'0"</option><option>6'1"</option><option>6'2"</option><option>6'3"</option><option>6'4"</option><option>6'5"</option><option>6'6"</option><option>6'7"</option><option>6'8"</option><option>6'9"</option><option>6'10"</option><option>6'11"</option>
+            <option>7'0"+</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- MHA DETAINED — shown first so section/diagnosis can conditionally appear -->
+      <div class="field" style="margin-bottom:14px">
+        <label>MHA Detained?</label>
+        <div class="opt-group">
+          <label class="opt"><input type="radio" name="b-detained" value="Yes" onchange="bookToggleMHA()"> Yes</label>
+          <label class="opt"><input type="radio" name="b-detained" value="No" onchange="bookToggleMHA()"> No</label>
+          <label class="opt"><input type="radio" name="b-detained" value="Informal" onchange="bookToggleMHA()"> Informal</label>
+          <label class="opt"><input type="radio" name="b-detained" value="Unknown" checked onchange="bookToggleMHA()"> Unknown</label>
+        </div>
+      </div>
+
+      <!-- Section + Diagnosis — only shown when detained Yes or Informal -->
+      <div id="b-mha-fields" style="display:none">
+        <div class="field-row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+
+          <!-- SECTION TAG PICKER -->
+          <div class="field">
+            <label>MHA Section <span style="color:#6b7494;font-size:10px">— add all that apply</span></label>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+              <select id="b-sec-picker" onchange="bookAddTag('b-sec-picker','b-sec-tags','b-section')">
+                <option value="">+ Add Section</option>
+                <option>Section 2</option><option>Section 3</option><option>Section 4</option>
+                <option>Section 5(2)</option><option>Section 5(4)</option><option>Section 7</option>
+                <option>Section 17</option><option>Section 17a</option><option>Section 35</option>
+                <option>Section 36</option><option>Section 37</option><option>Section 41</option>
+                <option>Section 47</option><option>Section 48</option><option>Section 135</option>
+                <option>Section 136</option><option value="__other__">Other…</option>
+              </select>
+            </div>
+            <div id="b-sec-other" style="display:none;margin-top:8px;display:none;gap:6px;align-items:center">
+              <input id="b-sec-custom" placeholder="Type section…" style="max-width:180px;display:inline-block">
+              <button type="button" onclick="bookAddCustomTag('b-sec-custom','b-sec-tags','b-section','b-sec-picker','b-sec-other')" style="background:none;border:1px solid #f5c518;color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 12px;cursor:pointer;white-space:nowrap">ADD</button>
+            </div>
+            <div id="b-sec-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+          </div>
+
+          <!-- DIAGNOSIS TAG PICKER -->
+          <div class="field">
+            <label>Diagnosis <span style="color:#6b7494;font-size:10px">— add all that apply</span></label>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+              <select id="b-diag-picker" onchange="bookAddTag('b-diag-picker','b-diag-tags','b-diagnosis')">
+                <option value="">+ Add Diagnosis</option>
+                <option>Schizophrenia</option>
+                <option>Bipolar Disorder (Manic Episode)</option>
+                <option>Bipolar Disorder (Depressive Episode)</option>
+                <option>Schizoaffective Disorder</option>
+                <option>Major Depressive Disorder</option>
+                <option>Emotionally Unstable Personality Disorder (EUPD / BPD)</option>
+                <option>Anorexia Nervosa</option>
+                <option>Postpartum Psychosis</option>
+                <option>Substance-Induced Psychotic Disorder</option>
+                <option>Dementia (Alzheimer's)</option>
+                <option>Dementia (Vascular)</option>
+                <option>Persistent Delusional Disorder</option>
+                <option>Obsessive-Compulsive Disorder (OCD)</option>
+                <option>ADHD</option>
+                <option value="__other__">Other…</option>
+              </select>
+            </div>
+            <div id="b-diag-other" style="display:none;margin-top:8px;gap:6px;align-items:center">
+              <input id="b-diag-custom" placeholder="Type diagnosis…" style="max-width:220px;display:inline-block">
+              <button type="button" onclick="bookAddCustomTag('b-diag-custom','b-diag-tags','b-diagnosis','b-diag-picker','b-diag-other')" style="background:none;border:1px solid #f5c518;color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 12px;cursor:pointer;white-space:nowrap">ADD</button>
+            </div>
+            <div id="b-diag-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="field-row" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+        <div class="field">
+          <label>Will they need returning?</label>
+          <div class="opt-group">
+            <label class="opt"><input type="radio" name="b-returning" value="Yes"> Yes</label>
+            <label class="opt"><input type="radio" name="b-returning" value="No"> No</label>
+            <label class="opt"><input type="radio" name="b-returning" value="Unknown" checked> Unknown</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Supporting Passengers (if any)</label>
+          <input id="b-sup-pass" placeholder="Names — must sign indemnity form">
+        </div>
+      </div>
+    </div>
+
+    <!-- RISK ASSESSMENT -->
+    <div class="section" style="border-top-color:#ef4444">
+      <div class="section-label" style="color:#ef4444">RISK ASSESSMENT</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        PLEASE COMPLETE AS ACCURATELY AS POSSIBLE. THIS HELPS OUR TEAM ASSIGN THE RIGHT NUMBER OF STAFF AND PREPARE APPROPRIATELY.
+      </div>
+
+      <div style="overflow-x:auto;margin-bottom:18px">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Acts of Risk</th>
+              <th class="rh-unlikely">Unlikely</th>
+              <th class="rh-possible">Possible</th>
+              <th class="rh-likely">Likely</th>
+              <th class="rh-highlikely">Highly Likely</th>
+              <th class="rh-unknown">Unknown</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Self Harm</td>
+              <td><input type="radio" name="r-selfHarm" value="Unlikely"></td>
+              <td><input type="radio" name="r-selfHarm" value="Possible"></td>
+              <td><input type="radio" name="r-selfHarm" value="Likely"></td>
+              <td><input type="radio" name="r-selfHarm" value="Highly Likely"></td>
+              <td><input type="radio" name="r-selfHarm" value="Unknown" checked></td>
+            </tr>
+            <tr>
+              <td>Suicide</td>
+              <td><input type="radio" name="r-suicide" value="Unlikely"></td>
+              <td><input type="radio" name="r-suicide" value="Possible"></td>
+              <td><input type="radio" name="r-suicide" value="Likely"></td>
+              <td><input type="radio" name="r-suicide" value="Highly Likely"></td>
+              <td><input type="radio" name="r-suicide" value="Unknown" checked></td>
+            </tr>
+            <tr>
+              <td>Resistance</td>
+              <td><input type="radio" name="r-resistance" value="Unlikely"></td>
+              <td><input type="radio" name="r-resistance" value="Possible"></td>
+              <td><input type="radio" name="r-resistance" value="Likely"></td>
+              <td><input type="radio" name="r-resistance" value="Highly Likely"></td>
+              <td><input type="radio" name="r-resistance" value="Unknown" checked></td>
+            </tr>
+            <tr>
+              <td>Aggression (physical)</td>
+              <td><input type="radio" name="r-aggression" value="Unlikely"></td>
+              <td><input type="radio" name="r-aggression" value="Possible"></td>
+              <td><input type="radio" name="r-aggression" value="Likely"></td>
+              <td><input type="radio" name="r-aggression" value="Highly Likely"></td>
+              <td><input type="radio" name="r-aggression" value="Unknown" checked></td>
+            </tr>
+            <tr>
+              <td>Violence</td>
+              <td><input type="radio" name="r-violence" value="Unlikely"></td>
+              <td><input type="radio" name="r-violence" value="Possible"></td>
+              <td><input type="radio" name="r-violence" value="Likely"></td>
+              <td><input type="radio" name="r-violence" value="Highly Likely"></td>
+              <td><input type="radio" name="r-violence" value="Unknown" checked></td>
+            </tr>
+            <tr>
+              <td>Escape</td>
+              <td><input type="radio" name="r-escape" value="Unlikely"></td>
+              <td><input type="radio" name="r-escape" value="Possible"></td>
+              <td><input type="radio" name="r-escape" value="Likely"></td>
+              <td><input type="radio" name="r-escape" value="Highly Likely"></td>
+              <td><input type="radio" name="r-escape" value="Unknown" checked></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="field-row two">
+        <div class="field">
+          <label>History of Violence?</label>
+          <div class="opt-group">
+            <label class="opt"><input type="radio" name="r-hist-violence" value="Yes"> Yes</label>
+            <label class="opt"><input type="radio" name="r-hist-violence" value="No"> No</label>
+            <label class="opt"><input type="radio" name="r-hist-violence" value="Unknown" checked> Unknown</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>COVID-19 Positive?</label>
+          <div class="opt-group">
+            <label class="opt"><input type="radio" name="r-covid" value="Yes"> Yes</label>
+            <label class="opt"><input type="radio" name="r-covid" value="No"> No</label>
+            <label class="opt"><input type="radio" name="r-covid" value="Unknown" checked> Unknown</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Known Triggers</label>
+        <input id="b-triggers" placeholder="e.g. loud noises, physical contact, male staff...">
+      </div>
+
+      <div class="field">
+        <label>Infections / Allergies</label>
+        <input id="b-infections" placeholder="e.g. MRSA, latex allergy...">
+      </div>
+    </div>
+
+    <!-- ADDITIONAL NOTES -->
+    <div class="section">
+      <div class="section-label">ADDITIONAL INFORMATION</div>
+      <div class="field">
+        <label>Any other information our team should know</label>
+        <textarea id="b-notes" placeholder="Mobility needs, medication, specific requirements, anything else relevant to this transport..."></textarea>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="reviewBooking()" id="submit-btn">REVIEW & CONFIRM →</button>
+  </div>
+
+  <!-- REVIEW SCREEN -->
+  <div id="review-screen">
+    <div class="review-header">
+      <div>
+        <div class="review-header-title">REVIEW YOUR BOOKING REQUEST</div>
+        <div class="review-header-sub">PLEASE CHECK ALL DETAILS ARE CORRECT BEFORE SUBMITTING</div>
+      </div>
+    </div>
+    <div id="review-body"></div>
+    <div class="review-actions">
+      <button class="btn-back" onclick="goBackToForm()">← EDIT</button>
+      <button class="btn-confirm" id="confirm-btn" onclick="confirmSubmit()">CONFIRM & SUBMIT</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div id="success-screen">
+    <div class="success-icon">✓</div>
+    <div class="success-title">BOOKING REQUEST RECEIVED</div>
+    <div class="success-ref" id="success-ref"></div>
+    <div class="success-msg">
+      Thank you. Your request has been received by our control team.<br><br>
+      We will confirm your booking or contact you on the number provided to discuss availability and timing.<br><br>
+      If your request is urgent please call us directly.
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCL1i7MzXTgoIHYKp-4Kx22BW2GFEGcJKQ",
+  authDomain: "citadel-e15fa.firebaseapp.com",
+  databaseURL: "https://citadel-e15fa-default-rtdb.firebaseio.com",
+  projectId: "citadel-e15fa",
+  storageBucket: "citadel-e15fa.firebasestorage.app",
+  messagingSenderId: "508316655986",
+  appId: "1:508316655986:web:2942774eb4a96885d5bdeb"
+});
+const db = firebase.database();
+
+// Show/hide "other" task field
+document.querySelectorAll('input[name="b-type"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('b-other-wrap').style.display = r.value === 'Other' ? 'block' : 'none';
+  });
+});
+
+// ---- MHA TOGGLE ----
+function bookToggleMHA() {
+  const val = gr('b-detained');
+  const show = val === 'Yes' || val === 'Informal';
+  document.getElementById('b-mha-fields').style.display = show ? '' : 'none';
+}
+
+// ---- TAG PICKER ----
+function bookAddTag(pickerId, tagsId, cbName) {
+  const picker = document.getElementById(pickerId);
+  const val = picker.value;
+  if (!val) return;
+  picker.value = '';
+  if (val === '__other__') {
+    const otherId = pickerId.replace('-picker', '-other');
+    const wrap = document.getElementById(otherId);
+    if (wrap) { wrap.style.display = 'flex'; }
+    return;
+  }
+  bookRenderTag(val, tagsId, cbName);
+}
+
+function bookAddCustomTag(inputId, tagsId, cbName, pickerId, wrpId) {
+  const input = document.getElementById(inputId);
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  document.getElementById(wrpId).style.display = 'none';
+  bookRenderTag(val, tagsId, cbName);
+}
+
+function bookRenderTag(val, tagsId, cbName) {
+  const container = document.getElementById(tagsId);
+  if (!container || container.querySelector(`[data-val="${val.replace(/"/g,'&quot;')}"]`)) return;
+  const tag = document.createElement('span');
+  tag.dataset.val = val;
+  tag.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.45);padding:5px 10px;font-size:12px;color:#f5c518;font-family:Barlow,sans-serif';
+  const cb = document.createElement('input');
+  cb.type='checkbox'; cb.name=cbName; cb.value=val; cb.checked=true; cb.style.display='none';
+  tag.innerHTML = `${val} <span onclick="this.closest('[data-val]').remove()" style="cursor:pointer;color:#8a94b8;font-size:14px;line-height:1">×</span>`;
+  tag.appendChild(cb);
+  container.appendChild(tag);
+}
+
+// ---- BUILD BUTTONS ----
+document.addEventListener('change', e => {
+  if (e.target.name === 'b-build') {
+    document.querySelectorAll('.build-opt').forEach(l => l.classList.remove('active'));
+    e.target.closest('.build-opt')?.classList.add('active');
+    document.getElementById('b-su-build').value = e.target.value;
+  }
+});
+
+function calcBookingAge(dob) {
+  if (!dob) return;
+  const d = new Date(dob), now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
+  document.getElementById('b-su-age').value = age >= 0 ? age : '';
+}
+
+function gv(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function gr(name) { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; }
+
+// Holds the collected booking object between review and confirm
+let _pendingBooking = null;
+
+function rv(val) {
+  if (!val || (Array.isArray(val) && !val.length)) return '<span class="review-value empty">—</span>';
+  return `<span class="review-value">${Array.isArray(val) ? val.join(', ') : val}</span>`;
+}
+
+function riskBadge(val) {
+  if (!val) return '<span class="risk-badge risk-unknown">UNKNOWN</span>';
+  const cls = {
+    'Unlikely':'risk-unlikely','Possible':'risk-possible',
+    'Likely':'risk-likely','Highly Likely':'risk-highlikely','Unknown':'risk-unknown'
+  }[val] || 'risk-unknown';
+  return `<span class="risk-badge ${cls}">${val.toUpperCase()}</span>`;
+}
+
+function buildBookingObject() {
+  return {
+    callerName:    gv('b-name'),
+    callerRole:    gv('b-role'),
+    org:           gv('b-org'),
+    tel:           gv('b-tel'),
+    email:         gv('b-email'),
+    taskType:      gr('b-type') || 'Transfer',
+    otherDetail:   gv('b-other'),
+    due:           gv('b-due'),
+    reason:        gv('b-reason'),
+    fromHosp:      gv('b-from-hosp'),
+    fromWard:      gv('b-from-ward'),
+    toHosp:        gv('b-to-hosp'),
+    toWard:        gv('b-to-ward'),
+    suName:        gv('b-su-name'),
+    suGender:      gv('b-su-gender'),
+    suNationality: gv('b-su-nationality'),
+    suDob:         gv('b-su-dob'),
+    suAge:         gv('b-su-age'),
+    suNhs:         gv('b-su-nhs'),
+    suBuild:       gv('b-su-build'),
+    suHeight:      gv('b-su-height'),
+    mhaSection:    Array.from(document.querySelectorAll('#b-sec-tags input[name="b-section"]:checked')).map(el=>el.value),
+    diagnosis:     Array.from(document.querySelectorAll('#b-diag-tags input[name="b-diagnosis"]:checked')).map(el=>el.value),
+    returning:     gr('b-returning'),
+    supPass:       gv('b-sup-pass'),
+    isDetainedMHA: gr('b-detained'),
+    notes:         gv('b-notes'),
+    risks: {
+      selfHarm:   gr('r-selfHarm'),
+      suicide:    gr('r-suicide'),
+      resistance: gr('r-resistance'),
+      aggression: gr('r-aggression'),
+      violence:   gr('r-violence'),
+      escape:     gr('r-escape'),
+    },
+    historyViolence: gr('r-hist-violence'),
+    covidPositive:   gr('r-covid'),
+    triggers:        gv('b-triggers'),
+    infections:      gv('b-infections'),
+  };
+}
+
+function reviewBooking() {
+  const b = buildBookingObject();
+
+  // Validate required fields
+  if (!b.callerName || !b.org || !b.tel || !b.due || !b.fromHosp || !b.toHosp || !b.suName) {
+    alert('Please complete all required fields marked with *');
+    return;
+  }
+
+  _pendingBooking = b;
+
+  // Format date nicely
+  const dueStr = b.due ? new Date(b.due).toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+
+  document.getElementById('review-body').innerHTML = `
+    <div class="review-section">
+      <div class="review-section-title">YOUR DETAILS</div>
+      <div class="review-grid">
+        <div class="review-row"><span class="review-label">NAME</span>${rv(b.callerName)}</div>
+        <div class="review-row"><span class="review-label">ROLE</span>${rv(b.callerRole)}</div>
+        <div class="review-row"><span class="review-label">ORGANISATION</span>${rv(b.org)}</div>
+        <div class="review-row"><span class="review-label">TELEPHONE</span>${rv(b.tel)}</div>
+        <div class="review-row full"><span class="review-label">EMAIL</span>${rv(b.email)}</div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <div class="review-section-title">TASK DETAILS</div>
+      <div class="review-grid">
+        <div class="review-row"><span class="review-label">TYPE</span>${rv(b.taskType === 'Other' ? b.otherDetail || 'Other' : b.taskType)}</div>
+        <div class="review-row"><span class="review-label">DATE & TIME REQUIRED</span><span class="review-value gold">${dueStr}</span></div>
+        <div class="review-row full"><span class="review-label">REASON FOR TRANSPORT</span>${rv(b.reason)}</div>
+        <div class="review-row"><span class="review-label">COLLECTING FROM</span>${rv(b.fromHosp)}${b.fromWard?` <span style="color:var(--muted);font-size:11px">Ward: ${b.fromWard}</span>`:''}</div>
+        <div class="review-row"><span class="review-label">CONVEYING TO</span>${rv(b.toHosp)}${b.toWard?` <span style="color:var(--muted);font-size:11px">Ward: ${b.toWard}</span>`:''}</div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <div class="review-section-title">PATIENT INFORMATION</div>
+      <div class="review-grid">
+        <div class="review-row"><span class="review-label">FULL NAME</span>${rv(b.suName)}</div>
+        <div class="review-row"><span class="review-label">DATE OF BIRTH</span>${rv(b.suDob)} ${b.suAge?`<span style="color:var(--muted);font-size:11px">(Age ${b.suAge})</span>`:''}</div>
+        <div class="review-row"><span class="review-label">GENDER</span>${rv(b.suGender)}</div>
+        <div class="review-row"><span class="review-label">NATIONALITY</span>${rv(b.suNationality)}</div>
+        <div class="review-row"><span class="review-label">NHS / HOSPITAL NO</span>${rv(b.suNhs)}</div>
+        <div class="review-row"><span class="review-label">BUILD / HEIGHT</span>${rv(b.suBuild)} ${b.suHeight?`/ ${b.suHeight}`:''}</div>
+        <div class="review-row"><span class="review-label">MHA DETAINED</span>${rv(b.isDetainedMHA)}</div>
+        <div class="review-row"><span class="review-label">WILL RETURN</span>${rv(b.returning)}</div>
+        ${b.mhaSection&&b.mhaSection.length?`<div class="review-row full"><span class="review-label">MHA SECTION</span><span class="review-value gold">${b.mhaSection.join(', ')}</span></div>`:''}
+        ${b.diagnosis&&b.diagnosis.length?`<div class="review-row full"><span class="review-label">DIAGNOSIS</span>${rv(b.diagnosis)}</div>`:''}
+        ${b.supPass?`<div class="review-row full"><span class="review-label">SUPPORTING PASSENGERS</span>${rv(b.supPass)}</div>`:''}
+      </div>
+    </div>
+
+    <div class="review-section">
+      <div class="review-section-title">RISK ASSESSMENT</div>
+      ${['selfHarm','suicide','resistance','aggression','violence','escape'].map(k=>{
+        const labels={selfHarm:'Self Harm',suicide:'Suicide',resistance:'Resistance',aggression:'Aggression (Physical)',violence:'Violence',escape:'Escape'};
+        return `<div class="review-risk-row"><span>${labels[k]}</span>${riskBadge(b.risks[k])}</div>`;
+      }).join('')}
+      <div class="review-grid" style="margin-top:4px">
+        <div class="review-row"><span class="review-label">HISTORY OF VIOLENCE</span>${rv(b.historyViolence)}</div>
+        <div class="review-row"><span class="review-label">COVID POSITIVE</span>${rv(b.covidPositive)}</div>
+        ${b.triggers?`<div class="review-row full"><span class="review-label">KNOWN TRIGGERS</span>${rv(b.triggers)}</div>`:''}
+        ${b.infections?`<div class="review-row full"><span class="review-label">INFECTIONS / ALLERGIES</span>${rv(b.infections)}</div>`:''}
+      </div>
+    </div>
+
+    ${b.notes?`
+    <div class="review-section">
+      <div class="review-section-title">ADDITIONAL NOTES</div>
+      <div class="review-row full"><span class="review-label">NOTES</span>${rv(b.notes)}</div>
+    </div>`:''}
+  `;
+
+  document.getElementById('booking-form').style.display = 'none';
+  document.getElementById('review-screen').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goBackToForm() {
+  document.getElementById('review-screen').style.display = 'none';
+  document.getElementById('booking-form').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function confirmSubmit() {
+  if (!_pendingBooking) return;
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'SUBMITTING...';
+
+  // Use Firebase cad_counter transaction for CS-XXXX reference
+  db.ref('cad_counter').transaction(current => (current || 0) + 1, (err, committed, snap) => {
+    if (err || !committed) {
+      btn.disabled = false;
+      btn.textContent = 'CONFIRM & SUBMIT';
+      alert('Something went wrong. Please try again or call us directly.');
+      return;
+    }
+    const cadNum = snap.val();
+    const ref = 'CS-' + String(cadNum).padStart(4, '0');
+
+    const booking = {
+      ..._pendingBooking,
+      id: ref,
+      status: 'pending',
+      submittedAt: new Date().toLocaleString('en-GB'),
+    };
+
+    db.ref('bookings/' + ref).set(booking)
+      .then(() => {
+        document.getElementById('review-screen').style.display = 'none';
+        document.getElementById('success-screen').style.display = 'block';
+        document.getElementById('success-ref').textContent = 'REFERENCE: ' + ref;
+        window.scrollTo({top:0, behavior:'smooth'});
+      })
+      .catch(err => {
+        console.error('Firebase write error:', err);
+        btn.disabled = false;
+        btn.textContent = 'CONFIRM & SUBMIT';
+        alert('Could not save booking (Error: ' + (err.code || err.message) + '). Please call us directly.');
+      });
+  });
+}
+</script>
+
+</body>
+</html>
