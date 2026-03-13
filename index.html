@@ -893,6 +893,19 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div id="bookings-list"></div>
   </div>
 
+  <!-- NEW BOOKING ALERT -->
+  <div id="new-booking-alert" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9900;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#2c3145;border:2px solid #fb923c;max-width:400px;width:100%;padding:32px;text-align:center;position:relative">
+      <div style="font-size:40px;margin-bottom:12px">📋</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:#fb923c;letter-spacing:3px;margin-bottom:8px">NEW BOOKING</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:#c8cde0;margin-bottom:24px">A new booking request has just been submitted and is waiting for your review.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="closeNewBookingAlert(); showView('bookings');" style="padding:13px;background:#fb923c;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer">VIEW NOW</button>
+        <button onclick="closeNewBookingAlert()" style="padding:13px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer">DISMISS</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR MODAL -->
   <div id="qr-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9800;align-items:center;justify-content:center;padding:20px">
     <div style="background:#fff;padding:32px;text-align:center;max-width:320px;width:100%">
@@ -1607,6 +1620,7 @@ let bookings = [];
 let activeBookingId = null;
 let bookingFilter = 'pending';
 
+let _prevBookingCount = null;
 db.ref('bookings').on('value', snap => {
   const val = snap.val();
   bookings = val ? Object.values(val).filter(b => b && b.id) : [];
@@ -1617,13 +1631,16 @@ db.ref('bookings').on('value', snap => {
     badge.textContent = pending;
     badge.style.display = pending > 0 ? 'inline-block' : 'none';
   }
+  // Pop-up alert if a NEW booking just came in (not on first load)
+  if (_prevBookingCount !== null && pending > _prevBookingCount && role === 'controller' && user) {
+    showNewBookingAlert();
+  }
+  _prevBookingCount = pending;
   // Re-render whatever is currently visible
   const homeVisible = document.getElementById('home-view') && document.getElementById('home-view').style.display !== 'none';
   const bookingsVisible = document.getElementById('bookings-view') && document.getElementById('bookings-view').style.display !== 'none';
   if (homeVisible) renderHomeDashboard();
   if (bookingsVisible) renderBookingsView();
-  // If logged in but home isn't visible yet (e.g. still loading after login), 
-  // the home render will happen via showView — but force a home re-render if we're on home
   if (!homeVisible && !bookingsVisible && role === 'controller' && user) {
     renderHomeDashboard();
   }
@@ -1787,6 +1804,12 @@ function doLogin() {
 function startClock() {
   const tick = () => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB',{hour12:false}); };
   tick(); setInterval(tick, 1000);
+  // Re-render home dashboard every minute so upcoming tasks move to active on the day automatically
+  setInterval(() => {
+    if (document.getElementById('home-view') && document.getElementById('home-view').style.display !== 'none') {
+      renderHomeDashboard();
+    }
+  }, 60000);
 }
 
 // ---- TASK TYPE ----
@@ -3103,7 +3126,7 @@ function activeCard(j) {
   const statusLabels = { dispatched:'DISPATCHED', enroute:'EN ROUTE', onsite:'ON SITE' };
   const col = statusColors[j.status] || '#f5c518';
   const allStaff = [j.crew, ...(j.additionalStaff||[])].filter(Boolean).join(', ');
-  return `<div style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid ${col};padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center">
+  return `<div style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid ${col};padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto auto;gap:16px;align-items:center">
     <div>
       <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${col};letter-spacing:1px;display:flex;align-items:center;gap:6px">
         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${col}"></span>${statusLabels[j.status]||j.status.toUpperCase()}
@@ -3117,6 +3140,9 @@ function activeCard(j) {
     </div>
     <div style="text-align:right">
       ${j.due?`<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text)">${new Date(j.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">DUE</div>`:''}
+    </div>
+    <div>
+      <button onclick="clearActiveJob('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px;white-space:nowrap">CLEAR</button>
     </div>
   </div>`;
 }
@@ -4075,8 +4101,8 @@ function renderCompleted() {
       ${(j.p1HandoverSigned||j.p2HandoverSigned) ? `<div style="padding:0 18px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--green);letter-spacing:1px"> ${[j.p1HandoverSigned?'P1 SIGNED':'',j.p2HandoverSigned?'P2 SIGNED':''].filter(Boolean).join(' · ')}</div>` : `<div style="padding:0 18px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--warn);letter-spacing:1px"> HANDOVERS NOT YET SIGNED</div>`}
       <div style="padding:10px 18px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
         ${j.readyToInvoice
-          ? `<span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#f5c518;letter-spacing:1px"> MARKED READY FOR INVOICING</span><button onclick="toggleInvoice('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">UNDO</button>`
-          : `<span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px">NOT YET FLAGGED FOR INVOICE</span><button onclick="toggleInvoice('${j.id}')" style="font-family:'Share Tech Mono',font-size:10px;padding:8px 20px;background:#f5c518;border:none;color:#2c3145;font-weight:700;letter-spacing:2px;cursor:pointer"> MARK READY FOR INVOICING</button>`
+          ? `<span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#f5c518;letter-spacing:1px"> MARKED READY FOR INVOICING</span><div style="display:flex;gap:8px"><button onclick="toggleInvoice('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">UNDO</button><button onclick="deleteJob('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button></div>`
+          : `<span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px">NOT YET FLAGGED FOR INVOICE</span><div style="display:flex;gap:8px"><button onclick="toggleInvoice('${j.id}')" style="font-family:'Share Tech Mono',font-size:10px;padding:8px 20px;background:#f5c518;border:none;color:#2c3145;font-weight:700;letter-spacing:2px;cursor:pointer"> MARK READY FOR INVOICING</button><button onclick="deleteJob('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button></div>`
         }
       </div>
     </div>
@@ -4090,6 +4116,43 @@ function toggleInvoice(id) {
   saveJobs();
   renderCompleted();
   showToast(j.readyToInvoice ? ' MARKED READY FOR INVOICING' : 'REMOVED FROM INVOICE QUEUE', j.readyToInvoice ? 'success' : 'warn');
+}
+
+function deleteJob(id) {
+  if (!confirm('Permanently delete this job? This cannot be undone.')) return;
+  db.ref('jobs/' + id).remove();
+  showToast('JOB DELETED', 'warn');
+}
+
+function clearActiveJob(id) {
+  if (!confirm('Remove this task from Active Jobs? It will still be saved in Completed Jobs.')) return;
+  const j = jobs.find(x => x.id === id);
+  if (!j) return;
+  j.status = 'complete';
+  j.completedAt = j.completedAt || new Date().toLocaleString('en-GB');
+  db.ref('jobs/' + id).set(j);
+  showToast('TASK CLEARED FROM ACTIVE', 'warn');
+}
+
+function showNewBookingAlert() {
+  document.getElementById('new-booking-alert').style.display = 'flex';
+  // Play a short chime if browser allows
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [523, 659, 784].forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq; o.type = 'sine';
+      g.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.18);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.18 + 0.3);
+      o.start(ctx.currentTime + i * 0.18);
+      o.stop(ctx.currentTime + i * 0.18 + 0.3);
+    });
+  } catch(e) {}
+}
+
+function closeNewBookingAlert() {
+  document.getElementById('new-booking-alert').style.display = 'none';
 }
 
 function renderInvoiceView() {
