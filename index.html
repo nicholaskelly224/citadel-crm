@@ -1856,34 +1856,15 @@ let jobs = [];
 
 // ---- FIREBASE SYNC ----
 // First load — hide connecting screen, then start live listener
-db.ref('jobs').once('value', snapshot => {
-  const data = snapshot.val();
-  jobs = data ? Object.values(data) : [];
-  // Sync jid to highest existing job number so IDs never clash
-  jobs.forEach(j => {
-    const match = String(j.id).match(/CS-(\d+)/);
-    if (match) jid = Math.max(jid, parseInt(match[1]));
-  });
+// Dismiss splash on page load — Firebase reads now require auth so we can't pre-load
+setTimeout(dismissSplash, 1800);
+
+// Show login screen once splash is gone
+setTimeout(() => {
   document.getElementById('fb-connecting').style.display = 'none';
   document.getElementById('login-screen').style.display = '';
-  // Dismiss loading splash once Firebase is ready
-  setTimeout(dismissSplash, 400);
-});
+}, 1800);
 
-// Live listener — keeps jobs in sync after login
-db.ref('jobs').on('value', snapshot => {
-  const data = snapshot.val();
-  jobs = data ? Object.values(data) : [];
-  // Keep jid in sync
-  jobs.forEach(j => {
-    const match = String(j.id).match(/CS-(\d+)/);
-    if (match) jid = Math.max(jid, parseInt(match[1]));
-  });
-  if (role === 'controller') { renderJobsTable(); updateStats(); if(document.getElementById('home-view').style.display!=='none') renderHomeDashboard(); }
-  else if (role === 'crew') { renderCrewJobs(); setTimeout(restoreSigs, 80); }
-});
-
-// Locations listener (single, no duplicate)
 const SEED_HOSPITALS = [
   'Pinetree Court Hospital','Cefn Coed Hospital','Bronllys Community Hospital',
   'Prince Philip Hospital','Glangwili Hospital','Royal Glamorgan General Hospital',
@@ -1891,62 +1872,65 @@ const SEED_HOSPITALS = [
   'Wrexham Maelor Hospital','Glan Clwyd Hospital','County Hospital'
 ];
 
-db.ref('locations').on('value', snap => {
-  const val = snap.val() || { hospital:[], ward:[], address:[], postcode:[] };
-  // Seed hospitals if none saved yet
-  if (!val.hospital || val.hospital.length === 0) {
-    val.hospital = SEED_HOSPITALS;
-    db.ref('locations').set(val);
-  } else {
-    // Merge any seed hospitals not already present
-    const existing = val.hospital.map(h => h.toLowerCase());
-    const toAdd = SEED_HOSPITALS.filter(h => !existing.includes(h.toLowerCase()));
-    if (toAdd.length) {
-      val.hospital = [...val.hospital, ...toAdd];
-      db.ref('locations').set(val);
-    }
-  }
-  window._locCache = val;
-});
-
-db.ref('leads').on('value', snap => {
-  const val = snap.val();
-  leads = val ? Object.values(val) : [];
-  if (document.getElementById('leads-view') && document.getElementById('leads-view').style.display !== 'none') renderLeadsView();
-});
-
 let bookings = [];
 let activeBookingId = null;
 let bookingFilter = 'pending';
-
 let _prevBookingCount = null;
-db.ref('bookings').on('value', snap => {
-  const val = snap.val();
-  bookings = val ? Object.values(val).filter(b => b && b.id) : [];
-  // Badge count of pending
-  const pending = bookings.filter(b => b.status === 'pending').length;
-  const badge = document.getElementById('bookings-badge');
-  if (badge) {
-    badge.textContent = pending;
-    badge.style.display = pending > 0 ? 'inline-block' : 'none';
-  }
-  // Pop-up alert if a NEW booking just came in (not on first load)
-  if (_prevBookingCount !== null && pending > _prevBookingCount && role === 'controller' && user) {
-    showNewBookingAlert();
-  }
-  _prevBookingCount = pending;
-  // Re-render whatever is currently visible
-  const homeVisible = document.getElementById('home-view') && document.getElementById('home-view').style.display !== 'none';
-  const bookingsVisible = document.getElementById('bookings-view') && document.getElementById('bookings-view').style.display !== 'none';
-  if (homeVisible) renderHomeDashboard();
-  if (bookingsVisible) renderBookingsView();
-  if (!homeVisible && !bookingsVisible && role === 'controller' && user) {
-    renderHomeDashboard();
-  }
-}, err => {
-  console.error('Bookings read error:', err);
-  showToast('BOOKINGS: ' + err.code, 'warn');
-});
+
+// All Firebase listeners — called once after successful login
+function startFirebaseListeners() {
+  db.ref('jobs').on('value', snapshot => {
+    const data = snapshot.val();
+    jobs = data ? Object.values(data) : [];
+    jobs.forEach(j => {
+      const match = String(j.id).match(/CS-(\d+)/);
+      if (match) jid = Math.max(jid, parseInt(match[1]));
+    });
+    if (role === 'controller') { renderJobsTable(); updateStats(); if(document.getElementById('home-view').style.display!=='none') renderHomeDashboard(); }
+    else if (role === 'crew') { renderCrewJobs(); setTimeout(restoreSigs, 80); }
+  });
+
+  db.ref('locations').on('value', snap => {
+    const val = snap.val() || { hospital:[], ward:[], address:[], postcode:[] };
+    if (!val.hospital || val.hospital.length === 0) {
+      val.hospital = SEED_HOSPITALS;
+      db.ref('locations').set(val);
+    } else {
+      const existing = val.hospital.map(h => (typeof h==='object'?h.name:h).toLowerCase());
+      const toAdd = SEED_HOSPITALS.filter(h => !existing.includes(h.toLowerCase()));
+      if (toAdd.length) { val.hospital = [...val.hospital, ...toAdd]; db.ref('locations').set(val); }
+    }
+    window._locCache = val;
+  });
+
+  db.ref('leads').on('value', snap => {
+    const val = snap.val();
+    leads = val ? Object.values(val) : [];
+    if (document.getElementById('leads-view') && document.getElementById('leads-view').style.display !== 'none') renderLeadsView();
+  });
+
+  db.ref('bookings').on('value', snap => {
+    const val = snap.val();
+    bookings = val ? Object.values(val).filter(b => b && b.id) : [];
+    const pending = bookings.filter(b => b.status === 'pending').length;
+    const badge = document.getElementById('bookings-badge');
+    if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? 'inline-block' : 'none'; }
+    if (_prevBookingCount !== null && pending > _prevBookingCount && role === 'controller' && user) { showNewBookingAlert(); }
+    _prevBookingCount = pending;
+    const homeVisible = document.getElementById('home-view') && document.getElementById('home-view').style.display !== 'none';
+    const bookingsVisible = document.getElementById('bookings-view') && document.getElementById('bookings-view').style.display !== 'none';
+    if (homeVisible) renderHomeDashboard();
+    if (bookingsVisible) renderBookingsView();
+  });
+
+  db.ref('incidents').on('value', snap => {
+    incidents = snap.val() ? Object.values(snap.val()).filter(Boolean) : [];
+    const newCount = incidents.filter(i => i.status === 'new').length;
+    const badge = document.getElementById('incidents-badge');
+    if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? 'inline-block' : 'none'; }
+    if (document.getElementById('incidents-view') && document.getElementById('incidents-view').style.display !== 'none') renderIncidentsView();
+  });
+}
 
 // CAD counter via Firebase transaction (ensures uniqueness across devices)
 function generateCAD() {
@@ -2063,6 +2047,9 @@ function loginSuccess() {
   document.getElementById('app').style.display = 'block';
   document.getElementById('ud').textContent = user.toUpperCase();
   document.getElementById('rd').textContent = role === 'controller' ? 'CONTROLLER' : 'CREW / ST';
+
+  // Start all Firebase listeners now that we're authenticated
+  startFirebaseListeners();
   if (role === 'controller') {
     document.getElementById('btn-home').style.display = 'inline-block';
     document.getElementById('btn-dispatch').style.display = 'inline-block';
@@ -5112,14 +5099,6 @@ function submitIncidentReport() {
 
 // ---- Incidents listener ----
 let incidents = [];
-db.ref('incidents').on('value', snap => {
-  incidents = snap.val() ? Object.values(snap.val()).filter(Boolean) : [];
-  // Badge count for controller
-  const newCount = incidents.filter(i => i.status === 'new').length;
-  const badge = document.getElementById('incidents-badge');
-  if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? 'inline-block' : 'none'; }
-  if (document.getElementById('incidents-view') && document.getElementById('incidents-view').style.display !== 'none') renderIncidentsView();
-});
 
 function renderIncidentsView() {
   const list = document.getElementById('incidents-list');
