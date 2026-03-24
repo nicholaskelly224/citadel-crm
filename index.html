@@ -3620,7 +3620,7 @@ function upcomingCard(j) {
 
 function bookingHomeCard(b) {
   const dueFmt = b.due ? new Date(b.due).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) + ' ' + new Date(b.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
-  return `<div onclick="showView('bookings');setTimeout(()=>openBookingModal('${b.id}'),120)" style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid #fb923c;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background='var(--surface)'">
+  return `<div onclick="openBookingModal('${b.id}')" style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid #fb923c;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background='var(--surface)'">
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;flex-wrap:wrap">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright)">${b.callerName||'—'}</div>
@@ -4184,8 +4184,27 @@ function renderBookingsView() {
 
 function openBookingModal(id) {
   const b = bookings.find(x => x.id === id);
-  if (!b) return;
+  if (!b) {
+    // Try refreshing bookings from Firebase then retry once
+    db.ref('bookings/' + id).once('value', snap => {
+      const data = snap.val();
+      if (data) {
+        if (!bookings.find(x => x.id === id)) bookings.push(data);
+        openBookingModal(id);
+      } else {
+        showToast('BOOKING NOT FOUND — ' + id, 'warn');
+      }
+    });
+    return;
+  }
   activeBookingId = id;
+
+  // Always reset panel state when opening
+  const bma = document.getElementById('bm-actions');
+  const bmd = document.getElementById('bm-dispatch-panel');
+  if (bma) bma.style.display = 'grid';
+  if (bmd) bmd.style.display = 'none';
+
   const dueFmt = b.due ? new Date(b.due).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' at ' + new Date(b.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
 
   document.getElementById('booking-modal-body').innerHTML = `
@@ -4196,9 +4215,9 @@ function openBookingModal(id) {
     <div style="background:var(--surface2);padding:14px;margin-bottom:14px">
       <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#fb923c;letter-spacing:2px;margin-bottom:10px">CONTACT</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-family:'Share Tech Mono',monospace;font-size:11px">
-        <div><span style="color:var(--muted)">NAME: </span>${b.callerName}</div>
+        <div><span style="color:var(--muted)">NAME: </span>${b.callerName||'—'}</div>
         <div><span style="color:var(--muted)">ROLE: </span>${b.callerRole||'—'}</div>
-        <div><span style="color:var(--muted)">ORG: </span>${b.org}</div>
+        <div><span style="color:var(--muted)">ORG: </span>${b.org||'—'}</div>
         <div><span style="color:var(--muted)">TEL: </span><span style="color:#fb923c">${b.tel||'—'}</span></div>
         ${b.email?`<div style="grid-column:span 2"><span style="color:var(--muted)">EMAIL: </span>${b.email}</div>`:''}
       </div>
