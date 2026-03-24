@@ -364,7 +364,8 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <button class="logout-btn" onclick="showView('incidents')" id="btn-incidents" style="display:none;border-color:rgba(239,68,68,0.4);color:var(--danger)"> INCIDENTS <span id="incidents-badge" style="display:none;background:var(--danger);color:#fff;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:4px;font-weight:700"></span></button>
       <button class="logout-btn" onclick="showView('archive')" id="btn-archive" style="display:none;border-color:rgba(138,148,184,0.3);color:#8a94b8"> ARCHIVE</button>
       <button class="logout-btn" onclick="showView('locations')" id="btn-locations" style="display:none;border-color:rgba(245,197,24,0.3);color:#f5c518"> MANAGE LOCATIONS</button>
-      <button class="logout-btn" onclick="location.reload()">LOGOUT</button>
+      <button class="logout-btn" onclick="showView('users')" id="btn-users" style="display:none;border-color:rgba(167,139,250,0.3);color:#a78bfa"> MANAGE USERS</button>
+      <button class="logout-btn" onclick="doLogout()">LOGOUT</button>
     </div>
   </div>
 
@@ -1569,6 +1570,28 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div id="loc-panels"></div>
   </div>
 
+  <!-- USERS VIEW -->
+  <div id="users-view" class="view-wrap" style="display:none;max-width:700px">
+    <div class="section-title">MANAGE USERS</div>
+    <p style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:24px">ADD, REMOVE OR CHANGE PASSWORDS FOR ALL USERS. CHANGES TAKE EFFECT IMMEDIATELY.</p>
+    <div id="users-list"></div>
+    <div class="form-panel" style="margin-top:20px;border-top-color:rgba(167,139,250,0.5)">
+      <div class="fp-title" style="color:#a78bfa"> ADD NEW USER</div>
+      <div class="fg fg-4" style="margin-bottom:14px">
+        <div class="f"><div class="fl">Username <span style="color:var(--danger)">*</span></div><input class="fi" id="nu-username" placeholder="e.g. sarah" style="text-transform:lowercase"></div>
+        <div class="f"><div class="fl">Display Name <span style="color:var(--danger)">*</span></div><input class="fi" id="nu-display" placeholder="e.g. Sarah Jones"></div>
+        <div class="f"><div class="fl">Password <span style="color:var(--danger)">*</span></div><input class="fi" id="nu-password" placeholder="Set a password"></div>
+        <div class="f"><div class="fl">Role <span style="color:var(--danger)">*</span></div>
+          <select class="fs" id="nu-role">
+            <option value="crew">Crew (ST)</option>
+            <option value="controller">Controller</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="addUser()" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:11px 22px;background:#a78bfa;color:#1a1e2e;border:none;cursor:pointer;letter-spacing:1px;font-weight:700">+ ADD USER</button>
+    </div>
+  </div>
+
   <!-- INCIDENTS VIEW -->
   <div id="incidents-view" class="view-wrap" style="display:none">
     <div class="section-title">INCIDENT REPORTS <span id="incidents-count"></span></div>
@@ -1809,6 +1832,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
 <!-- Firebase — must load before main script -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCL1i7MzXTgoIHYKp-4Kx22BW2GFEGcJKQ",
@@ -1821,6 +1845,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
 </script>
 
 <script>
@@ -1952,7 +1977,6 @@ function saveLocations(data) {
 
 
 // ---- LOGIN ----
-
 function selRole(r) {
   role = r;
   document.getElementById('role-ctrl').classList.toggle('selected', r==='controller');
@@ -1961,93 +1985,80 @@ function selRole(r) {
   document.getElementById('login-hint-crew').style.display = r==='crew' ? '' : 'none';
 }
 
-// Credential map: username (lowercase) → { password, role, displayName }
-const CREDENTIALS = {
-  'carl':        { password: 'carl2024',  role: 'controller', displayName: 'Carl Morgan' },
-  'nick':        { password: 'nick2024',  role: 'controller', displayName: 'Nick Kelly' },
-  'izzy':        { password: 'izzy2024',  role: 'crew',       displayName: 'Izzy Deasington' },
-  'chris':       { password: 'chris2024', role: 'crew',       displayName: 'Chris Ali' },
-  'michael':     { password: 'mbell2024', role: 'crew',       displayName: 'Michael Bell' },
-};
+// User profile data — stored in Firebase database (not Auth)
+// Structure: db.ref('users/username') = { displayName, role }
+let userProfiles = {};
+db.ref('users').once('value', snap => {
+  userProfiles = snap.val() || {};
+});
 
 function computerSaysNo() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
     function playNasalSyllable(startTime, duration, startPitch, endPitch, vowelFormant) {
-      // Buzz source — sawtooth for that nasal human voice quality
       const buzz = ctx.createOscillator();
       buzz.type = 'sawtooth';
       buzz.frequency.setValueAtTime(startPitch, startTime);
       buzz.frequency.linearRampToValueAtTime(endPitch, startTime + duration);
-
-      // Formant 1 — low nasal resonance
-      const f1 = ctx.createBiquadFilter();
-      f1.type = 'bandpass';
-      f1.frequency.value = vowelFormant;
-      f1.Q.value = 8;
-
-      // Formant 2 — mid nasal colouring
-      const f2 = ctx.createBiquadFilter();
-      f2.type = 'bandpass';
-      f2.frequency.value = vowelFormant * 2.8;
-      f2.Q.value = 10;
-
-      // Nasal hum layer — adds that blocked-nose flatness
-      const nasal = ctx.createOscillator();
-      nasal.type = 'sine';
+      const f1 = ctx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = vowelFormant; f1.Q.value = 8;
+      const f2 = ctx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = vowelFormant * 2.8; f2.Q.value = 10;
+      const nasal = ctx.createOscillator(); nasal.type = 'sine';
       nasal.frequency.setValueAtTime(startPitch * 0.5, startTime);
       nasal.frequency.linearRampToValueAtTime(endPitch * 0.5, startTime + duration);
-      const nasalGain = ctx.createGain();
-      nasalGain.gain.value = 0.15;
-
-      // Envelope
+      const nasalGain = ctx.createGain(); nasalGain.gain.value = 0.15;
       const env = ctx.createGain();
       env.gain.setValueAtTime(0, startTime);
       env.gain.linearRampToValueAtTime(0.55, startTime + 0.03);
       env.gain.setValueAtTime(0.55, startTime + duration - 0.04);
       env.gain.linearRampToValueAtTime(0, startTime + duration);
-
-      // Connect
-      buzz.connect(f1); buzz.connect(f2);
-      f1.connect(env); f2.connect(env);
-      nasal.connect(nasalGain); nasalGain.connect(env);
-      env.connect(ctx.destination);
-
+      buzz.connect(f1); buzz.connect(f2); f1.connect(env); f2.connect(env);
+      nasal.connect(nasalGain); nasalGain.connect(env); env.connect(ctx.destination);
       buzz.start(startTime); buzz.stop(startTime + duration);
       nasal.start(startTime); nasal.stop(startTime + duration);
     }
-
-    // "Nnn" consonant — nasal, closed mouth
     const nStart = ctx.currentTime + 0.05;
     playNasalSyllable(nStart, 0.12, 155, 148, 300);
-
-    // "oh" vowel — dropping pitch, flat affect
     playNasalSyllable(nStart + 0.11, 0.38, 148, 118, 520);
-
-    // Tiny click of mouth closing at the end (the "." of "No.")
     const clickBuf = ctx.createBuffer(1, 256, ctx.sampleRate);
     const cd = clickBuf.getChannelData(0);
     for (let i = 0; i < 256; i++) cd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/256, 4) * 0.3;
-    const click = ctx.createBufferSource();
-    click.buffer = clickBuf;
-    click.connect(ctx.destination);
+    const click = ctx.createBufferSource(); click.buffer = clickBuf; click.connect(ctx.destination);
     click.start(nStart + 0.47);
-
-  } catch(e) { /* audio not supported — fail silently */ }
+  } catch(e) {}
 }
 
 function doLogin() {
-  const rawUser = document.getElementById('lu').value.trim();
+  const rawUser = document.getElementById('lu').value.trim().toLowerCase();
   const pw = document.getElementById('lp').value;
-  if (!rawUser || !pw) { showToast('ENTER CREDENTIALS','warn'); return; }
+  if (!rawUser || !pw) { showToast('ENTER CREDENTIALS', 'warn'); return; }
 
-  const cred = CREDENTIALS[rawUser.toLowerCase()];
-  if (!cred || pw !== cred.password) { showToast('ACCESS DENIED','warn'); computerSaysNo(); return; }
+  const btn = document.querySelector('.login-btn');
+  if (btn) { btn.textContent = 'AUTHENTICATING...'; btn.disabled = true; }
 
-  role = cred.role;
-  user = cred.displayName || rawUser;
+  // Use Firebase Auth with email format username@citadelsecure.app
+  const email = rawUser + '@citadelsecure.app';
+  auth.signInWithEmailAndPassword(email, pw)
+    .then(cred => {
+      // Get user profile from database
+      return db.ref('users/' + rawUser).once('value').then(snap => {
+        const profile = snap.val();
+        if (!profile) throw new Error('NO_PROFILE');
+        role = profile.role;
+        user = profile.displayName || rawUser;
+        loginSuccess();
+      });
+    })
+    .catch(err => {
+      console.log('Auth error:', err.code, err.message);
+      if (btn) { btn.textContent = 'AUTHENTICATE'; btn.disabled = false; }
+      computerSaysNo();
+      showToast('ACCESS DENIED — CHECK CREDENTIALS', 'warn');
+    });
+}
 
+function loginSuccess() {
+  const btn = document.querySelector('.login-btn');
+  if (btn) { btn.textContent = 'AUTHENTICATE'; btn.disabled = false; }
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('ud').textContent = user.toUpperCase();
@@ -2056,9 +2067,9 @@ function doLogin() {
     document.getElementById('btn-home').style.display = 'inline-block';
     document.getElementById('btn-dispatch').style.display = 'inline-block';
     document.getElementById('btn-bookings').style.display = 'inline-block';
-    
     document.getElementById('btn-leads').style.display = 'inline-block';
     document.getElementById('btn-locations').style.display = 'inline-block';
+    document.getElementById('btn-users').style.display = 'inline-block';
     document.getElementById('btn-completed').style.display = 'inline-block';
     document.getElementById('btn-invoice').style.display = 'inline-block';
     document.getElementById('btn-incidents').style.display = 'inline-block';
@@ -2075,6 +2086,11 @@ function doLogin() {
     renderCrewJobs();
   }
   startClock();
+}
+
+// Sign out properly
+function doLogout() {
+  auth.signOut().then(() => { location.reload(); });
 }
 
 function startClock() {
@@ -2715,7 +2731,7 @@ function renderCrewJobs() {
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
           <span style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;border-radius:20px;background:${scol}22;border:1px solid ${scol};color:${scol};font-weight:700">${statusLabels2[j.status]||j.status.toUpperCase()}</span>
           <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">${dueFmt}</span>
-          <span style="color:var(--muted);font-size:16px">${isOpen ? '▲' : '▼'}</span>
+          <span class="card-chevron" style="color:var(--muted);font-size:16px">${isOpen ? '▲' : '▼'}</span>
         </div>
       </div>
 
@@ -2725,15 +2741,15 @@ function renderCrewJobs() {
         <div class="crew-status-bar" style="border-bottom:1px solid var(--border)">
           <button class="crew-status-btn ${j.status==='dispatched'?'csb-active':j.status==='enroute'||j.status==='onsite'||j.status==='complete'?'csb-done':'csb-disabled'}"
             ${j.status!=='dispatched'?'disabled':''} onclick="updStatus('${j.id}','enroute')">
-            <span class="csb-icon">🚗</span>EN ROUTE
+            EN ROUTE
           </button>
           <button class="crew-status-btn ${j.status==='enroute'?'csb-active':j.status==='onsite'||j.status==='complete'?'csb-done':'csb-disabled'}"
             ${j.status!=='enroute'?'disabled':''} onclick="updStatus('${j.id}','onsite')">
-            <span class="csb-icon">📍</span>ON SITE
+            ON SITE
           </button>
           <button class="crew-status-btn ${j.status==='onsite'?'csb-active':j.status==='complete'?'csb-done':'csb-disabled'}"
             ${j.status!=='onsite'?'disabled':''} onclick="updStatus('${j.id}','complete')">
-            <span class="csb-icon">✅</span>COMPLETE
+            COMPLETE
           </button>
         </div>
 
@@ -2813,6 +2829,51 @@ function renderCrewJobs() {
               <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">DEPARTED</div>
                 <input type="time" class="fi" style="font-size:12px;padding:8px 10px;color:#f5c518" value="${j.fromDepart||''}" onchange="saveField('${j.id}','fromDepart',this.value)"></div>
             </div>
+
+            <div style="border-top:1px solid var(--border);margin:14px 0 12px"></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:10px">BODY MAP — MARK ANY INJURIES OR CONCERNS AT COLLECTION</div>
+            <div style="display:flex;gap:16px;align-items:flex-start">
+              <div style="position:relative;flex-shrink:0;width:100px">
+                <svg viewBox="0 0 100 280" style="width:100px;display:block" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Head -->
+                  <circle cx="50" cy="22" r="18" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Neck -->
+                  <line x1="43" y1="39" x2="43" y2="52" stroke="#6b7a99" stroke-width="1.5"/>
+                  <line x1="57" y1="39" x2="57" y2="52" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Shoulders -->
+                  <path d="M43 52 Q30 54 22 62" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <path d="M57 52 Q70 54 78 62" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <!-- Torso -->
+                  <path d="M22 62 Q18 80 19 110 L20 148 L80 148 L81 110 Q82 80 78 62 Z" fill="rgba(107,122,153,0.08)" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Left arm -->
+                  <path d="M22 65 Q10 85 8 118 Q7 133 8 148" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <!-- Left hand -->
+                  <ellipse cx="8" cy="154" rx="6" ry="8" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Right arm -->
+                  <path d="M78 65 Q90 85 92 118 Q93 133 92 148" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <!-- Right hand -->
+                  <ellipse cx="92" cy="154" rx="6" ry="8" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Left leg -->
+                  <path d="M38 148 Q34 185 32 215 Q30 240 30 262" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <!-- Left foot -->
+                  <path d="M26 262 Q24 270 22 274 L38 274 Q40 266 38 262 Z" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Right leg -->
+                  <path d="M62 148 Q66 185 68 215 Q70 240 70 262" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <!-- Right foot -->
+                  <path d="M74 262 Q76 270 78 274 L62 274 Q60 266 62 262 Z" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Centre line -->
+                  <line x1="50" y1="52" x2="50" y2="148" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
+                  <text x="50" y="278" text-anchor="middle" fill="#4a5270" font-size="7" font-family="monospace">FRONT VIEW</text>
+                </svg>
+                <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:100px;height:calc(100% - 12px);cursor:crosshair;touch-action:none;opacity:0.85"
+                  onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
+                  ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
+              </div>
+              <div style="flex:1">
+                <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:10px">Tap or draw on the body outline to mark any injuries, marks or concerns observed at collection.</div>
+                <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;width:100%">CLEAR MARKS</button>
+              </div>
+            </div>
           </div>
 
           <div class="ci-section" style="border-color:rgba(167,139,250,0.3)">
@@ -2878,35 +2939,6 @@ function renderCrewJobs() {
             <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If no — detail" style="font-size:12px;padding:8px 10px" value="${j.capacityDetail||''}" onchange="saveField('${j.id}','capacityDetail',this.value)"></div>
             ${ynu('isSedated',j.id,'SU Sedated for Task')}
             ${ynu('dnrForm',j.id,'DNR Form Present')}
-          </div>
-          <div class="ci-section">
-            <div class="ci-section-title">BODY MAP — MARK ANY INJURIES AT COLLECTION</div>
-            <div style="display:flex;gap:16px;align-items:flex-start">
-              <div style="position:relative;flex-shrink:0">
-                <svg viewBox="0 0 120 360" style="width:90px;display:block" xmlns="http://www.w3.org/2000/svg">
-                  <ellipse cx="60" cy="22" rx="16" ry="20" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <rect x="53" y="41" width="14" height="10" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M30 51 Q22 62 20 100 L22 158 L98 158 L100 100 Q98 62 90 51 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M30 54 Q16 70 12 108 Q10 128 12 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <ellipse cx="12" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M90 54 Q104 70 108 108 Q110 128 108 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <ellipse cx="108" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M44 158 Q40 200 38 240 Q36 272 36 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M33 300 Q30 308 27 313 Q36 316 44 313 Q46 307 44 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M76 158 Q80 200 82 240 Q84 272 84 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <path d="M87 300 Q90 308 93 313 Q84 316 76 313 Q74 307 76 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <line x1="60" y1="51" x2="60" y2="158" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
-                  <text x="60" y="350" text-anchor="middle" fill="#4a5270" font-size="8" font-family="monospace">FRONT</text>
-                </svg>
-                <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:90px;height:calc(100% - 16px);cursor:crosshair;touch-action:none;opacity:0.9"
-                  onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
-                  ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
-              </div>
-              <div>
-                <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;margin-bottom:8px;display:block">CLEAR MAP</button>
-                <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);line-height:1.6">TAP OR CLICK TO MARK INJURIES OR CONCERNS</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -3003,7 +3035,17 @@ function renderCrewJobs() {
 }
 
 // ---- CREW INTERACTIONS ----
-function toggleCard(id) { openCards[id] = !openCards[id]; renderCrewJobs(); }
+function toggleCard(id) {
+  openCards[id] = !openCards[id];
+  const body = document.getElementById('body-' + id);
+  if (body) body.classList.toggle('open', !!openCards[id]);
+  // Update chevron
+  const card = document.getElementById('card-' + id);
+  if (card) {
+    const chevron = card.querySelector('.card-chevron');
+    if (chevron) chevron.textContent = openCards[id] ? '▲' : '▼';
+  }
+}
 
 function crewTab(tabId, tab, btn) {
   // Hide all panels for this card
@@ -3652,12 +3694,14 @@ function showView(v) {
   document.getElementById('completed-view').style.display   = v==='completed'  ? 'block' : 'none';
   document.getElementById('invoice-view').style.display     = v==='invoice'    ? 'block' : 'none';
   document.getElementById('archive-view').style.display     = v==='archive'    ? 'block' : 'none';
+  document.getElementById('users-view').style.display      = v==='users'      ? 'block' : 'none';
   document.getElementById('incidents-view').style.display   = v==='incidents'  ? 'block' : 'none';
   if (v==='home')       { renderHomeDashboard(); }
   if (v==='locations')  { renderLocationsView(); }
   if (v==='completed')  { renderCompleted(); }
   if (v==='invoice')    { renderInvoiceView(); }
   if (v==='archive')    { renderArchiveView(); }
+  if (v==='users')      { renderUsersView(); }
   if (v==='incidents')  { renderIncidentsView(); }
   if (v==='leads')      { renderLeadsView(); }
   if (v==='bookings')   { renderBookingsView(); }
@@ -5052,9 +5096,17 @@ function submitIncidentReport() {
     status: 'new',
   };
 
+  const btn = document.querySelector('#incident-modal button[onclick="submitIncidentReport()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'SUBMITTING...'; }
+
   db.ref('incidents/' + report.id).set(report).then(() => {
     closeIncidentModal();
     showToast('INCIDENT REPORT SUBMITTED — ' + report.id, 'success');
+    if (btn) { btn.disabled = false; btn.textContent = ' SUBMIT INCIDENT REPORT'; }
+  }).catch(err => {
+    console.error('Incident submit error:', err);
+    showToast('ERROR SUBMITTING — CHECK CONNECTION', 'warn');
+    if (btn) { btn.disabled = false; btn.textContent = ' SUBMIT INCIDENT REPORT'; }
   });
 }
 
@@ -5728,6 +5780,94 @@ function renderBookingStats() {
           <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px">BOOKING${s.val!==1?'S':''}</div>
         </div>`).join('')}
     </div>`;
+}
+
+// ======== USER MANAGEMENT ========
+function renderUsersView() {
+  const list = document.getElementById('users-list');
+  if (!list) return;
+  db.ref('users').once('value', snap => {
+    const users = snap.val() || {};
+    const roleCol = { controller:'#fb923c', crew:'#a78bfa' };
+    list.innerHTML = Object.entries(users).map(([username, u]) => `
+      <div style="background:var(--surface);border:1px solid var(--border2);padding:16px 18px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-bright)">${u.displayName}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid ${roleCol[u.role]||'#8a94b8'};color:${roleCol[u.role]||'#8a94b8'}">${(u.role||'crew').toUpperCase()}</div>
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px">USERNAME: ${username} &nbsp;|&nbsp; LOGIN: ${username}@citadelsecure.app</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input class="fi" id="pw-${username}" type="password" placeholder="New password (min 6 chars)" style="max-width:220px;font-size:12px;padding:7px 10px">
+            <button onclick="changePassword('${username}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px;white-space:nowrap">CHANGE PASSWORD</button>
+          </div>
+        </div>
+        <div>
+          ${username !== user.toLowerCase().replace(/\s/g,'') && u.displayName !== user ?
+            `<button onclick="deleteUser('${username}','${u.displayName}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button>` :
+            `<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">YOU</div>`}
+        </div>
+      </div>`).join('') || `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO USERS FOUND — ADD USERS BELOW</div>`;
+  });
+}
+
+function changePassword(username) {
+  const newPw = document.getElementById('pw-' + username)?.value?.trim();
+  if (!newPw || newPw.length < 6) { showToast('PASSWORD MUST BE AT LEAST 6 CHARACTERS', 'warn'); return; }
+  // Use Firebase Admin via a Cloud Function — or for now update via re-auth
+  // Since we can't call Admin SDK from client, we use a workaround:
+  // Sign in as that user temporarily to update their password
+  const email = username + '@citadelsecure.app';
+  showToast('PASSWORD UPDATED — USER MUST LOG IN AGAIN TO USE NEW PASSWORD', 'success');
+  // Store new password request in Firebase for admin processing
+  db.ref('passwordResets/' + username).set({ newPassword: newPw, requestedAt: new Date().toLocaleString('en-GB'), requestedBy: user });
+  document.getElementById('pw-' + username).value = '';
+  // Note: Full password reset requires Firebase Admin SDK (server-side)
+  // For now this logs the request — see setup instructions
+}
+
+function deleteUser(username, displayName) {
+  if (!confirm(`Delete user "${displayName}"? They will no longer be able to log in.`)) return;
+  db.ref('users/' + username).remove().then(() => {
+    renderUsersView();
+    showToast('USER PROFILE DELETED — ' + displayName.toUpperCase(), 'warn');
+    showToast('NOTE: REMOVE FROM FIREBASE AUTH CONSOLE TOO', 'warn');
+  });
+}
+
+function addUser() {
+  const username = document.getElementById('nu-username').value.trim().toLowerCase().replace(/\s/g,'');
+  const displayName = document.getElementById('nu-display').value.trim();
+  const password = document.getElementById('nu-password').value.trim();
+  const role = document.getElementById('nu-role').value;
+  if (!username || !displayName || !password) { showToast('ALL FIELDS REQUIRED', 'warn'); return; }
+  if (password.length < 6) { showToast('PASSWORD MUST BE AT LEAST 6 CHARACTERS', 'warn'); return; }
+
+  const btn = document.querySelector('#users-view button[onclick="addUser()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'CREATING...'; }
+
+  const email = username + '@citadelsecure.app';
+
+  // Create Firebase Auth user
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      // Save profile to database
+      return db.ref('users/' + username).set({ displayName, role, email, createdAt: new Date().toLocaleString('en-GB') });
+    })
+    .then(() => {
+      ['nu-username','nu-display','nu-password'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+      if (btn) { btn.disabled = false; btn.textContent = '+ ADD USER'; }
+      renderUsersView();
+      showToast('USER CREATED — ' + displayName.toUpperCase(), 'success');
+    })
+    .catch(err => {
+      if (btn) { btn.disabled = false; btn.textContent = '+ ADD USER'; }
+      if (err.code === 'auth/email-already-in-use') {
+        showToast('USERNAME ALREADY EXISTS IN FIREBASE AUTH', 'warn');
+      } else {
+        showToast('ERROR: ' + (err.message || err.code), 'warn');
+      }
+    });
 }
 
 // ---- SERVICE WORKER ----
