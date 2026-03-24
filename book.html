@@ -377,11 +377,23 @@
       margin-bottom: 10px;
     }
     .success-ref {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 13px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
       color: var(--gold);
-      margin-bottom: 14px;
-      letter-spacing: 1px;
+      margin: 16px 0;
+      letter-spacing: 3px;
+      background: rgba(245,197,24,0.08);
+      border: 1px solid rgba(245,197,24,0.3);
+      display: inline-block;
+      padding: 12px 28px;
+    }
+    .success-ref-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 3px;
+      margin-bottom: 4px;
     }
     .success-msg {
       font-size: 14px;
@@ -826,10 +838,11 @@
   <div id="success-screen">
     <div class="success-icon">✓</div>
     <div class="success-title">BOOKING REQUEST RECEIVED</div>
+    <div class="success-ref-label">YOUR REFERENCE NUMBER</div>
     <div class="success-ref" id="success-ref"></div>
     <div class="success-msg">
-      Thank you. Your request has been received by our control team.<br><br>
-      We will confirm your booking or contact you on the number provided to discuss availability and timing.<br><br>
+      Please quote this reference number when contacting us.<br><br>
+      Your request has been received by our control team. We will confirm your booking or contact you on the number provided to discuss availability and timing.<br><br>
       If your request is urgent please call us directly.
     </div>
   </div>
@@ -1096,7 +1109,7 @@ function confirmSubmit() {
       .then(() => {
         document.getElementById('review-screen').style.display = 'none';
         document.getElementById('success-screen').style.display = 'block';
-        document.getElementById('success-ref').textContent = 'REFERENCE: ' + ref;
+        document.getElementById('success-ref').textContent = ref;
         window.scrollTo({top:0, behavior:'smooth'});
       })
       .catch(err => {

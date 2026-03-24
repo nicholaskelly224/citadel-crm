@@ -335,6 +335,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <button class="logout-btn" onclick="showView('leads')" id="btn-leads" style="display:none;border-color:rgba(20,184,166,0.4);color:#2dd4bf"> LEADS</button>
       <button class="logout-btn" onclick="showView('completed')" id="btn-completed" style="display:none;border-color:rgba(0,230,118,0.3);color:var(--green)"> COMPLETED JOBS</button>
       <button class="logout-btn" onclick="showView('invoice')" id="btn-invoice" style="display:none;border-color:rgba(245,197,24,0.4);color:#f5c518"> INVOICING</button>
+      <button class="logout-btn" onclick="showView('archive')" id="btn-archive" style="display:none;border-color:rgba(138,148,184,0.3);color:#8a94b8"> ARCHIVE</button>
       <button class="logout-btn" onclick="showView('locations')" id="btn-locations" style="display:none;border-color:rgba(245,197,24,0.3);color:#f5c518"> MANAGE LOCATIONS</button>
       <button class="logout-btn" onclick="location.reload()">LOGOUT</button>
     </div>
@@ -445,7 +446,10 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <div class="fg fg-4" style="margin-bottom:14px">
         <div class="f span2">
           <div class="fl">Appointing Agency Name</div>
-          <input class="fi" id="fi-agency" placeholder="Hospital / Trust / Authority name">
+          <div class="ac-wrap">
+            <input class="fi" id="fi-agency" placeholder="Hospital / Trust / Authority name" autocomplete="off" oninput="acInput(this,'hospital')" onfocus="acInput(this,'hospital')" onblur="acBlur('ac-agency')">
+            <div class="ac-dropdown" id="ac-agency"></div>
+          </div>
         </div>
         <div class="f">
           <div class="fl">Agency POC (Point of Contact)</div>
@@ -888,33 +892,51 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <div class="fp-title" style="color:var(--green)"> Travel Estimate
         <button onclick="calcTravel()" style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;background:none;border:1px solid rgba(0,230,118,0.4);color:var(--green);cursor:pointer;letter-spacing:1px;transition:all 0.2s" onmouseover="this.style.background='rgba(0,230,118,0.1)'" onmouseout="this.style.background='none'">CALCULATE</button>
       </div>
-      <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px">ENTER POSTCODES IN THE COLLECTING FROM AND CONVEYING TO SECTIONS, THEN CLICK CALCULATE. ESTIMATES BASED ON UK AVERAGE DRIVING SPEED.</p>
+      <div class="fg fg-3" style="margin-bottom:14px">
+        <div class="f">
+          <div class="fl">Our Base Postcode</div>
+          <input class="fi" id="fi-base-post" placeholder="e.g. CF10 1AA" value="">
+        </div>
+        <div class="f">
+          <div class="fl">Point 1 Postcode <span style="color:var(--muted);font-size:9px">(auto from Collecting From)</span></div>
+          <input class="fi" id="fi-travel-from-post" placeholder="Auto-filled from above">
+        </div>
+        <div class="f">
+          <div class="fl">Point 2 Postcode <span style="color:var(--muted);font-size:9px">(auto from Conveying To)</span></div>
+          <input class="fi" id="fi-travel-to-post" placeholder="Auto-filled from above">
+        </div>
+      </div>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px">CALCULATES: BASE → POINT 1 → POINT 2 → BASE. ESTIMATES BASED ON UK AVERAGE DRIVING SPEED.</p>
       <div id="travel-results" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
           <div style="background:var(--surface2);border:1px solid rgba(0,230,118,0.2);padding:16px;text-align:center">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Crew → Pickup</div>
-            <div id="tr-leg1-dist" style="font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--green);line-height:1">—</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">BASE → POINT 1</div>
+            <div id="tr-leg1-dist" style="font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--green);line-height:1">—</div>
             <div id="tr-leg1-time" style="font-size:12px;color:var(--muted);margin-top:4px">—</div>
           </div>
           <div style="background:var(--surface2);border:1px solid rgba(0,230,118,0.2);padding:16px;text-align:center">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Pickup → Drop-off</div>
-            <div id="tr-leg2-dist" style="font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--green);line-height:1">—</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">POINT 1 → POINT 2</div>
+            <div id="tr-leg2-dist" style="font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--green);line-height:1">—</div>
             <div id="tr-leg2-time" style="font-size:12px;color:var(--muted);margin-top:4px">—</div>
           </div>
           <div style="background:var(--surface2);border:1px solid rgba(0,230,118,0.2);padding:16px;text-align:center">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Drop-off → Return</div>
-            <div id="tr-leg3-dist" style="font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--green);line-height:1">—</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">POINT 2 → BASE</div>
+            <div id="tr-leg3-dist" style="font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--green);line-height:1">—</div>
             <div id="tr-leg3-time" style="font-size:12px;color:var(--muted);margin-top:4px">—</div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div style="background:var(--surface2);border:1px solid rgba(245,197,24,0.2);padding:14px;display:flex;align-items:center;justify-content:space-between">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Total Distance</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px">TOTAL DISTANCE</span>
             <span id="tr-total-dist" style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#f5c518">—</span>
           </div>
           <div style="background:var(--surface2);border:1px solid rgba(245,197,24,0.2);padding:14px;display:flex;align-items:center;justify-content:space-between">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Total Est. Time</span>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px">TOTAL TRAVEL TIME</span>
             <span id="tr-total-time" style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#f5c518">—</span>
+          </div>
+          <div style="background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.4);padding:14px;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#f5c518;letter-spacing:1px">TOTAL TASK HOURS</span>
+            <span id="tr-total-hours" style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:#f5c518">—</span>
           </div>
         </div>
         <div id="tr-note" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:1px"></div>
@@ -947,6 +969,9 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <div class="section-title" style="margin-bottom:0">BOOKINGS <span id="bookings-count"></span></div>
       <button onclick="openAddBookingModal()" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px 18px;background:#fb923c;color:#1a1e2e;border:none;cursor:pointer;letter-spacing:1px;font-weight:700">+ ADD BOOKING</button>
     </div>
+
+    <!-- Booking stats -->
+    <div id="booking-stats-panel"></div>
 
     <!-- Filter tabs -->
     <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
@@ -1513,6 +1538,16 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div id="loc-panels"></div>
   </div>
 
+  <!-- ARCHIVE VIEW -->
+  <div id="archive-view" class="view-wrap" style="display:none">
+    <div class="section-title">ARCHIVE <span id="archive-count"></span></div>
+    <p style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">ALL INVOICED AND COMPLETED JOBS — RETAINED FOR COMPLIANCE AND FUTURE REFERENCE.</p>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <input id="archive-search" class="fi" style="max-width:280px;padding:9px 14px;font-size:13px" placeholder="Search by name, job ID, agency..." oninput="renderArchiveView()">
+    </div>
+    <div id="archive-list"></div>
+  </div>
+
   <div id="completed-view" class="view-wrap" style="display:none">
     <div class="section-title">COMPLETED JOBS <span id="completed-count"></span></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
@@ -1531,8 +1566,43 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div id="invoice-list"></div>
   </div>
   <div id="crew-view" class="view-wrap">
-    <div class="section-title">MY TASKS <span id="crew-name-tag"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+      <div class="section-title" style="margin-bottom:0">MY TASKS <span id="crew-name-tag"></span></div>
+      <button onclick="openSectionGuide()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(167,139,250,0.5);color:#a78bfa;cursor:pointer;letter-spacing:1px"> SECTION REFERENCE GUIDE</button>
+    </div>
     <div id="crew-jobs-list"><div class="empty">NO JOBS ASSIGNED</div></div>
+  </div>
+</div>
+
+<!-- SECTION GUIDE MODAL -->
+<div id="section-guide-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9950;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#2c3145;border:1px solid rgba(167,139,250,0.3);max-width:720px;width:100%;padding:26px 28px;margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#a78bfa;letter-spacing:2px"> SECTION REFERENCE GUIDE</div>
+      <button onclick="closeSectionGuide()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button onclick="setSectionTab('ew')" id="sg-tab-ew" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 16px;background:rgba(167,139,250,0.15);border:1px solid #a78bfa;color:#a78bfa;cursor:pointer;letter-spacing:1px">ENGLAND & WALES</button>
+      <button onclick="setSectionTab('scot')" id="sg-tab-scot" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 16px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">SCOTLAND</button>
+    </div>
+
+    <!-- England & Wales -->
+    <div id="sg-ew">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:14px">MENTAL HEALTH ACT 1983 (AMENDED 2007) — ENGLAND & WALES</div>
+      <div id="sg-ew-content"></div>
+    </div>
+
+    <!-- Scotland -->
+    <div id="sg-scot" style="display:none">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:14px">MENTAL HEALTH (CARE AND TREATMENT) (SCOTLAND) ACT 2003</div>
+      <div id="sg-scot-content"></div>
+    </div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border2);font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);line-height:1.6">
+       PAPERWORK MUST PHYSICALLY TRAVEL WITH THE PATIENT AT ALL TIMES. ALWAYS VERIFY DOCUMENTS AT POINT 1 BEFORE DEPARTING AND HAND OVER AT POINT 2.
+    </div>
   </div>
 </div>
 
@@ -1858,6 +1928,7 @@ function doLogin() {
     document.getElementById('btn-locations').style.display = 'inline-block';
     document.getElementById('btn-completed').style.display = 'inline-block';
     document.getElementById('btn-invoice').style.display = 'inline-block';
+    document.getElementById('btn-archive').style.display = 'inline-block';
     showView('home');
     renderJobsTable(); updateStats(); refreshCAD();
   } else {
@@ -1914,7 +1985,7 @@ function crewAvatar(name, small) {
 // ---- TASK TYPE ----
 function setTaskType(t) {
   taskType = t;
-  ['transport','bedwatch','other'].forEach(x => {
+  ['transfer','bedwatch','other'].forEach(x => {
     document.getElementById('tt-'+x).classList.toggle('active', x===t);
   });
   document.getElementById('f-other-detail').style.display = t==='other' ? 'flex' : 'none';
@@ -2537,7 +2608,7 @@ function renderCrewJobs() {
             <div class="ib-row"><span class="ib-label">GP Code</span><span class="ib-val">${j.suGp||'—'}</span></div>
           </div>
           <div class="ib">
-            <div class="ib-title"> Collecting From</div>
+            <div class="ib-title"> Collecting From — Point 1</div>
             <div class="ib-row"><span class="ib-label">Hospital</span><span class="ib-val">${j.fromHosp||'—'}</span></div>
             <div class="ib-row"><span class="ib-label">Ward</span><span class="ib-val">${j.fromWard||'—'}</span></div>
             <div class="ib-row"><span class="ib-label">Address</span><span class="ib-val" style="font-size:11px">${j.fromAddr||'—'}</span></div>
@@ -2553,9 +2624,29 @@ function renderCrewJobs() {
               <span class="ib-label">Departed</span>
               <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.fromDepart||''}" onchange="saveField('${j.id}','fromDepart',this.value)">
             </div>
+            <div style="border-top:1px solid rgba(245,197,24,0.3);margin:12px 0 8px"></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:8px">HANDOVER — RELEASING PARTY</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div><div class="fl" style="margin-bottom:4px">Full Name</div>
+                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Releasing party" value="${j.p1HandoverName||''}" onchange="saveField('${j.id}','p1HandoverName',this.value)"></div>
+              <div><div class="fl" style="margin-bottom:4px">Position</div>
+                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Job title" value="${j.p1HandoverPosition||''}" onchange="saveField('${j.id}','p1HandoverPosition',this.value)"></div>
+              <div><div class="fl" style="margin-bottom:4px">Date</div>
+                <input type="date" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p1HandoverDate||''}" onchange="saveField('${j.id}','p1HandoverDate',this.value)"></div>
+              <div><div class="fl" style="margin-bottom:4px">Time</div>
+                <input type="time" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p1HandoverTime||''}" onchange="saveField('${j.id}','p1HandoverTime',this.value)"></div>
+            </div>
+            <div class="fl" style="margin-bottom:4px">Signature</div>
+            <canvas id="sig-${j.id}-p1" style="width:100%;height:90px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
+              onmousedown="sigStart(event,'${j.id}-p1')" onmousemove="sigDraw(event,'${j.id}-p1')" onmouseup="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" onmouseleave="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')"
+              ontouchstart="sigStart(event,'${j.id}-p1')" ontouchmove="sigDraw(event,'${j.id}-p1')" ontouchend="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')"></canvas>
+            <div style="display:flex;gap:8px;margin-top:5px;align-items:center">
+              <button onclick="sigClear('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 8px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer">CLEAR</button>
+              <span class="sig-status-${j.id}-p1" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${j.p1HandoverSigned?'var(--green)':'var(--muted)'}">${j.p1HandoverSigned?' SIGNED':'NOT YET SIGNED'}</span>
+            </div>
           </div>
           <div class="ib">
-            <div class="ib-title"> Conveying To</div>
+            <div class="ib-title"> Conveying To — Point 2</div>
             <div class="ib-row"><span class="ib-label">Hospital</span><span class="ib-val">${j.toHosp||'—'}</span></div>
             <div class="ib-row"><span class="ib-label">Ward</span><span class="ib-val">${j.toWard||'—'}</span></div>
             <div class="ib-row"><span class="ib-label">Address</span><span class="ib-val" style="font-size:11px">${j.toAddr||'—'}</span></div>
@@ -2571,8 +2662,27 @@ function renderCrewJobs() {
               <span class="ib-label">Departed</span>
               <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.toDepart||''}" onchange="saveField('${j.id}','toDepart',this.value)">
             </div>
+            <div style="border-top:1px solid rgba(245,197,24,0.3);margin:12px 0 8px"></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:8px">HANDOVER — RECEIVING PARTY</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div><div class="fl" style="margin-bottom:4px">Full Name</div>
+                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Receiving party" value="${j.p2HandoverName||''}" onchange="saveField('${j.id}','p2HandoverName',this.value)"></div>
+              <div><div class="fl" style="margin-bottom:4px">Position</div>
+                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Job title" value="${j.p2HandoverPosition||''}" onchange="saveField('${j.id}','p2HandoverPosition',this.value)"></div>
+              <div><div class="fl" style="margin-bottom:4px">Date</div>
+                <input type="date" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p2HandoverDate||''}" onchange="saveField('${j.id}','p2HandoverDate',this.value)"></div>
+              <div><div class="fl" style="margin-bottom:4px">Time</div>
+                <input type="time" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p2HandoverTime||''}" onchange="saveField('${j.id}','p2HandoverTime',this.value)"></div>
+            </div>
+            <div class="fl" style="margin-bottom:4px">Signature</div>
+            <canvas id="sig-${j.id}-p2" style="width:100%;height:90px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
+              onmousedown="sigStart(event,'${j.id}-p2')" onmousemove="sigDraw(event,'${j.id}-p2')" onmouseup="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" onmouseleave="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')"
+              ontouchstart="sigStart(event,'${j.id}-p2')" ontouchmove="sigDraw(event,'${j.id}-p2')" ontouchend="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')"></canvas>
+            <div style="display:flex;gap:8px;margin-top:5px;align-items:center">
+              <button onclick="sigClear('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 8px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer">CLEAR</button>
+              <span class="sig-status-${j.id}-p2" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${j.p2HandoverSigned?'var(--green)':'var(--muted)'}">${j.p2HandoverSigned?' SIGNED':'NOT YET SIGNED'}</span>
+            </div>
           </div>
-        </div>
         ${j.hasPoint3 ? `
         <div class="ib" style="margin-bottom:14px;border-color:rgba(192,132,252,0.3)">
           <div class="ib-title" style="color:#c084fc"> Point 3 — Additional Stop</div>
@@ -2613,6 +2723,9 @@ function renderCrewJobs() {
             </div>
           </div>
         </div>
+
+        <!-- PAPERWORK REQUIRED -->
+        ${getPaperworkBlock(j)}
 
         <!-- RISK ASSESSMENT — Read only, set by controller -->
         <div class="ib" style="margin-bottom:14px;border-color:rgba(255,59,59,0.3)">
@@ -2711,98 +2824,33 @@ function renderCrewJobs() {
           <textarea class="fta" placeholder="Lead ST summary of the task..." onchange="saveField('${j.id}','leadStSummary',this.value)">${j.leadStSummary||''}</textarea>
         </div>
 
-        <!-- POINT 1 HANDOVER + BODY MAP -->
-        <div class="ib" style="margin-bottom:14px;border-color:rgba(245,197,24,0.3)">
-          <div class="ib-title" style="color:#f5c518"> Point 1 Handover — Collecting From</div>
-          <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:14px">PERSON RELEASING THE SERVICE USER INTO OUR CARE — FULL NAME, POSITION, DATE, TIME AND SIGNATURE REQUIRED.</p>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-            <div><div class="fl" style="margin-bottom:5px">Full Name</div>
-              <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Releasing party full name" value="${j.p1HandoverName||''}" onchange="saveField('${j.id}','p1HandoverName',this.value)"></div>
-            <div><div class="fl" style="margin-bottom:5px">Position / Role</div>
-              <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Job title" value="${j.p1HandoverPosition||''}" onchange="saveField('${j.id}','p1HandoverPosition',this.value)"></div>
-            <div><div class="fl" style="margin-bottom:5px">Date</div>
-              <input type="date" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p1HandoverDate||''}" onchange="saveField('${j.id}','p1HandoverDate',this.value)"></div>
-            <div><div class="fl" style="margin-bottom:5px">Time</div>
-              <input type="time" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p1HandoverTime||''}" onchange="saveField('${j.id}','p1HandoverTime',this.value)"></div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
-            <div>
-              <div class="fl" style="margin-bottom:5px">Signature</div>
-              <canvas id="sig-${j.id}-p1" style="width:100%;height:110px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
-                onmousedown="sigStart(event,'${j.id}-p1')" onmousemove="sigDraw(event,'${j.id}-p1')" onmouseup="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" onmouseleave="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')"
-                ontouchstart="sigStart(event,'${j.id}-p1')" ontouchmove="sigDraw(event,'${j.id}-p1')" ontouchend="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')"></canvas>
-              <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-                <button onclick="sigClear('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">CLEAR</button>
-                <span class="sig-status-${j.id}-p1" style="font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:${j.p1HandoverSigned?'var(--green)':'var(--muted)'}">${j.p1HandoverSigned?' SIGNED':'NOT YET SIGNED'}</span>
-              </div>
+        <!-- BODY MAP — standalone below handover sections -->
+        <div class="ib" style="margin-bottom:0">
+          <div class="ib-title"> Body Map — Mark any injuries / concerns at collection</div>
+          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+            <div style="position:relative;display:inline-block">
+              <svg viewBox="0 0 120 360" style="width:110px;display:block" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="60" cy="22" rx="16" ry="20" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <rect x="53" y="41" width="14" height="10" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M30 51 Q22 62 20 100 L22 158 L98 158 L100 100 Q98 62 90 51 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M30 54 Q16 70 12 108 Q10 128 12 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <ellipse cx="12" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M90 54 Q104 70 108 108 Q110 128 108 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <ellipse cx="108" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M44 158 Q40 200 38 240 Q36 272 36 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M33 300 Q30 308 27 313 Q36 316 44 313 Q46 307 44 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M76 158 Q80 200 82 240 Q84 272 84 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <path d="M87 300 Q90 308 93 313 Q84 316 76 313 Q74 307 76 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                <line x1="60" y1="51" x2="60" y2="158" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
+                <text x="60" y="350" text-anchor="middle" fill="#4a5270" font-size="8" font-family="monospace">FRONT</text>
+              </svg>
+              <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:110px;height:calc(100% - 16px);cursor:crosshair;touch-action:none;opacity:0.9"
+                onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
+                ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
             </div>
             <div>
-              <div class="fl" style="margin-bottom:5px">Body Map <span style="color:var(--muted);font-size:9px;letter-spacing:0">— Mark any injuries / concerns at collection</span></div>
-              <div style="position:relative;display:inline-block;width:100%">
-                <svg viewBox="0 0 200 380" style="width:100%;max-width:180px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Head -->
-                  <ellipse cx="100" cy="30" rx="22" ry="26" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Neck -->
-                  <rect x="91" y="54" width="18" height="14" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Body -->
-                  <path d="M60 68 Q50 80 48 120 L50 175 L150 175 L152 120 Q150 80 140 68 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Left arm -->
-                  <path d="M60 72 Q40 90 34 130 Q30 155 32 170" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Left hand -->
-                  <ellipse cx="32" cy="176" rx="8" ry="10" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Right arm -->
-                  <path d="M140 72 Q160 90 166 130 Q170 155 168 170" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Right hand -->
-                  <ellipse cx="168" cy="176" rx="8" ry="10" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Left leg -->
-                  <path d="M78 175 Q72 220 70 265 Q68 300 68 330" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Left foot -->
-                  <path d="M64 330 Q60 340 56 345 Q68 348 78 345 Q80 338 78 330 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Right leg -->
-                  <path d="M122 175 Q128 220 130 265 Q132 300 132 330" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Right foot -->
-                  <path d="M136 330 Q140 340 144 345 Q132 348 122 345 Q120 338 122 330 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                  <!-- Centre line -->
-                  <line x1="100" y1="68" x2="100" y2="175" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
-                  <!-- Label -->
-                  <text x="100" y="372" text-anchor="middle" fill="#4a5270" font-size="9" font-family="monospace">FRONT</text>
-                </svg>
-                <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:100%;height:calc(100% - 16px);cursor:crosshair;touch-action:none;opacity:0.9"
-                  onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
-                  ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
-              </div>
-              <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">
-                <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">CLEAR MAP</button>
-                <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">TAP/CLICK TO MARK</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- POINT 2 HANDOVER -->
-        <div class="ib" style="margin-bottom:0;border-color:rgba(245,197,24,0.3)">
-          <div class="ib-title" style="color:#f5c518"> Point 2 Handover — Conveying To</div>
-          <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:14px">I THE UNDERSIGNED CONFIRM I HAVE THE AUTHORITY TO ACCEPT THE PERSON NAMED WITHIN THIS REPORT FROM THE CUSTODY OF CITADEL SECURE AND THAT THE PERSON HAS NO INJURIES OF CONCERN.</p>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-            <div><div class="fl" style="margin-bottom:5px">Full Name</div>
-              <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Receiving party full name" value="${j.p2HandoverName||''}" onchange="saveField('${j.id}','p2HandoverName',this.value)"></div>
-            <div><div class="fl" style="margin-bottom:5px">Position / Role</div>
-              <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Job title" value="${j.p2HandoverPosition||''}" onchange="saveField('${j.id}','p2HandoverPosition',this.value)"></div>
-            <div><div class="fl" style="margin-bottom:5px">Date</div>
-              <input type="date" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p2HandoverDate||''}" onchange="saveField('${j.id}','p2HandoverDate',this.value)"></div>
-            <div><div class="fl" style="margin-bottom:5px">Time</div>
-              <input type="time" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p2HandoverTime||''}" onchange="saveField('${j.id}','p2HandoverTime',this.value)"></div>
-          </div>
-          <div>
-            <div class="fl" style="margin-bottom:5px">Signature</div>
-            <canvas id="sig-${j.id}-p2" style="width:100%;height:110px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
-              onmousedown="sigStart(event,'${j.id}-p2')" onmousemove="sigDraw(event,'${j.id}-p2')" onmouseup="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" onmouseleave="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')"
-              ontouchstart="sigStart(event,'${j.id}-p2')" ontouchmove="sigDraw(event,'${j.id}-p2')" ontouchend="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')"></canvas>
-            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-              <button onclick="sigClear('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">CLEAR</button>
-              <span class="sig-status-${j.id}-p2" style="font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:${j.p2HandoverSigned?'var(--green)':'var(--muted)'}">${j.p2HandoverSigned?' SIGNED':'NOT YET SIGNED'}</span>
+              <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px;display:block;margin-bottom:8px">CLEAR MAP</button>
+              <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">TAP OR CLICK TO MARK INJURIES</span>
             </div>
           </div>
         </div>
@@ -3236,11 +3284,21 @@ async function calcTravel() {
   errEl.style.display = 'none';
   resEl.style.display = 'none';
 
-  const fromPost = gv('fi-from-post');
-  const toPost = gv('fi-to-post');
+  // Auto-read postcodes from form fields if travel fields are empty
+  const fromPost = document.getElementById('fi-from-post')?.value?.trim();
+  const toPost = document.getElementById('fi-to-post')?.value?.trim();
+  if (fromPost && !document.getElementById('fi-travel-from-post').value) document.getElementById('fi-travel-from-post').value = fromPost;
+  if (toPost && !document.getElementById('fi-travel-to-post').value) document.getElementById('fi-travel-to-post').value = toPost;
 
-  if (!fromPost && !toPost) {
-    errEl.textContent = ' ENTER AT LEAST THE PICKUP AND DROP-OFF POSTCODES TO CALCULATE';
+  const basePost  = document.getElementById('fi-base-post').value.trim();
+  const p1Post    = document.getElementById('fi-travel-from-post').value.trim();
+  const p2Post    = document.getElementById('fi-travel-to-post').value.trim();
+
+  // Save base postcode for next time
+  if (basePost) localStorage.setItem('cs_base_post', basePost);
+
+  if (!p1Post || !p2Post) {
+    errEl.textContent = ' POINT 1 AND POINT 2 POSTCODES ARE REQUIRED — FILL IN COLLECTING FROM AND CONVEYING TO SECTIONS FIRST';
     errEl.style.display = 'block';
     return;
   }
@@ -3248,46 +3306,68 @@ async function calcTravel() {
   errEl.textContent = 'CALCULATING...';
   errEl.style.display = 'block';
 
-  // Fetch coords for available postcodes
-  const [fromCoords, toCoords] = await Promise.all([
-    fromPost ? getPostcodeCoords(fromPost) : null,
-    toPost ? getPostcodeCoords(toPost) : null,
+  const [baseCoords, p1Coords, p2Coords] = await Promise.all([
+    basePost ? getPostcodeCoords(basePost) : null,
+    getPostcodeCoords(p1Post),
+    getPostcodeCoords(p2Post),
   ]);
 
-  if (fromPost && !fromCoords) { errEl.textContent = ` COULD NOT FIND POSTCODE: ${fromPost.toUpperCase()}`; return; }
-  if (toPost && !toCoords) { errEl.textContent = ` COULD NOT FIND POSTCODE: ${toPost.toUpperCase()}`; return; }
+  if (!p1Coords) { errEl.textContent = ` COULD NOT FIND POSTCODE: ${p1Post.toUpperCase()}`; return; }
+  if (!p2Coords) { errEl.textContent = ` COULD NOT FIND POSTCODE: ${p2Post.toUpperCase()}`; return; }
 
   errEl.style.display = 'none';
   resEl.style.display = 'block';
 
-  // Leg 1: Pickup → Drop-off (main journey)
-  let leg2Miles = null;
-  if (fromCoords && toCoords) {
-    const km = haversineKm(fromCoords.lat, fromCoords.lon, toCoords.lat, toCoords.lon);
-    leg2Miles = kmToMiles(km);
+  // Leg 1: Base → P1
+  let leg1Miles = null;
+  if (baseCoords) {
+    leg1Miles = kmToMiles(haversineKm(baseCoords.lat, baseCoords.lon, p1Coords.lat, p1Coords.lon));
+  }
+  // Leg 2: P1 → P2
+  const leg2Miles = kmToMiles(haversineKm(p1Coords.lat, p1Coords.lon, p2Coords.lat, p2Coords.lon));
+  // Leg 3: P2 → Base
+  let leg3Miles = null;
+  if (baseCoords) {
+    leg3Miles = kmToMiles(haversineKm(p2Coords.lat, p2Coords.lon, baseCoords.lat, baseCoords.lon));
   }
 
-  // Leg 2: Drop-off → Return (same as leg2 reversed)
-  const leg3Miles = leg2Miles;
-
-  // Leg 1: no crew origin postcode — show as N/A
-  setLeg('leg1', 'tr-leg1-dist', 'tr-leg1-time', null);
-  document.getElementById('tr-leg1-dist').textContent = '—';
-  document.getElementById('tr-leg1-time').textContent = 'No crew postcode';
-
+  const l1 = setLeg('leg1', 'tr-leg1-dist', 'tr-leg1-time', leg1Miles);
   const l2 = setLeg('leg2', 'tr-leg2-dist', 'tr-leg2-time', leg2Miles);
   const l3 = setLeg('leg3', 'tr-leg3-dist', 'tr-leg3-time', leg3Miles);
 
-  const totalMiles = l2 + l3;
+  if (!baseCoords) {
+    document.getElementById('tr-leg1-dist').textContent = '—';
+    document.getElementById('tr-leg1-time').textContent = 'Add base postcode';
+    document.getElementById('tr-leg3-dist').textContent = '—';
+    document.getElementById('tr-leg3-time').textContent = 'Add base postcode';
+  }
+
+  const totalMiles = l1 + l2 + l3;
   document.getElementById('tr-total-dist').textContent = Math.round(totalMiles * 10)/10 + ' mi';
 
-  // Total time
-  const totalRoadMiles = totalMiles / 1.3; // already road-adjusted, reverse for time calc
+  // Total travel time in mins
   const totalMins = Math.round((totalMiles / 50) * 60);
   const th = Math.floor(totalMins/60), tm = totalMins%60;
-  document.getElementById('tr-total-time').textContent = th > 0 ? `~${th}h ${tm}m` : `~${tm} min`;
-  document.getElementById('tr-note').textContent = ` ${fromPost.toUpperCase()} → ${toPost.toUpperCase()} — Estimates based on straight-line distance ×1.3 road factor at avg 50mph. Add time for traffic, handover & waiting.`;
+  document.getElementById('tr-total-time').textContent = th > 0 ? `~${th}h ${tm}m` : `~${tm}m`;
+
+  // Total task hours (travel + est 1hr on site per point)
+  const onSiteMins = 60; // assume 1hr on site
+  const totalTaskMins = totalMins + onSiteMins;
+  const tth = Math.floor(totalTaskMins/60), ttm = totalTaskMins%60;
+  document.getElementById('tr-total-hours').textContent = tth > 0 ? `~${tth}h ${ttm}m` : `~${ttm}m`;
+
+  const parts = [];
+  if (basePost) parts.push(basePost.toUpperCase());
+  parts.push(p1Post.toUpperCase(), p2Post.toUpperCase());
+  if (basePost) parts.push(basePost.toUpperCase());
+  document.getElementById('tr-note').textContent = ` ${parts.join(' → ')} — Straight-line ×1.3 road factor at avg 50mph. Task hours include ~1hr on-site. Add time for traffic & waiting.`;
 }
+
+// Restore saved base postcode
+(function() {
+  const saved = localStorage.getItem('cs_base_post');
+  if (saved) { const el = document.getElementById('fi-base-post'); if(el) el.value = saved; }
+})();
 
 
 // Stores: hospitals[], wards[], addresses[], postcodes[]
@@ -3367,10 +3447,20 @@ function highlight(text, query) {
 function acSelect(ddId, value) {
   const dd = document.getElementById(ddId);
   if (!dd) return;
-  // Find the sibling input (previous element sibling of dropdown)
   const input = dd.previousElementSibling;
   if (input) { input.value = value; input.dispatchEvent(new Event('change')); }
   dd.classList.remove('open');
+  // Auto-fill linked postcode if this is a hospital field
+  if (ddId === 'ac-from-hosp') {
+    const pc = getHospPostcode(value);
+    if (pc) { const el = document.getElementById('fi-from-post'); if(el && !el.value) el.value = pc; }
+  } else if (ddId === 'ac-to-hosp') {
+    const pc = getHospPostcode(value);
+    if (pc) { const el = document.getElementById('fi-to-post'); if(el && !el.value) el.value = pc; }
+  } else if (ddId === 'ac-agency') {
+    const pc = getHospPostcode(value);
+    // agency doesn't have a postcode field but that's fine
+  }
 }
 
 function acBlur(ddId) {
@@ -3405,11 +3495,12 @@ function showView(v) {
   document.getElementById('locations-view').style.display   = v==='locations'  ? 'block' : 'none';
   document.getElementById('completed-view').style.display   = v==='completed'  ? 'block' : 'none';
   document.getElementById('invoice-view').style.display     = v==='invoice'    ? 'block' : 'none';
+  document.getElementById('archive-view').style.display     = v==='archive'    ? 'block' : 'none';
   if (v==='home')       { renderHomeDashboard(); }
   if (v==='locations')  { renderLocationsView(); }
   if (v==='completed')  { renderCompleted(); }
   if (v==='invoice')    { renderInvoiceView(); }
-  
+  if (v==='archive')    { renderArchiveView(); }
   if (v==='leads')      { renderLeadsView(); }
   if (v==='bookings')   { renderBookingsView(); }
 }
@@ -4051,6 +4142,9 @@ function setBookingFilter(f) {
 }
 
 function renderBookingsView() {
+  // Stats panel
+  const statsPanel = document.getElementById('booking-stats-panel');
+  if (statsPanel) statsPanel.innerHTML = renderBookingStats();
 
   const filtered = bookingFilter === 'all' ? bookings : bookings.filter(b => b.status === bookingFilter);
   filtered.sort((a,b) => (b.submittedAt || '') > (a.submittedAt || '') ? 1 : -1);
@@ -4461,13 +4555,14 @@ function renderCompleted() {
 }
 
 function markInvoiced(id) {
-  if (!confirm('Mark this job as invoiced? It will be removed from the invoicing queue.')) return;
+  if (!confirm('Mark this job as invoiced? It will move to the Archive for compliance records.')) return;
   const j = jobs.find(j=>j.id===id); if(!j) return;
   j.invoiced = true;
+  j.archived = true;
   j.invoicedAt = new Date().toLocaleString('en-GB');
   j.readyToInvoice = false;
   db.ref('jobs/' + id).set(j);
-  showToast('MARKED AS INVOICED — ' + id, 'success');
+  showToast('INVOICED & ARCHIVED — ' + id, 'success');
 }
 
 function toggleInvoice(id) {
@@ -4603,13 +4698,27 @@ function renderInvoiceView() {
 
 function renderLocationsView() {
   const data = loadLocations();
+  // Hospital panel — shows name + postcode together
+  const hospHtml = `
+    <div class="form-panel" style="margin-bottom:18px">
+      <div class="fp-title"> Hospitals / Facilities</div>
+      <div style="display:flex;gap:10px;margin-bottom:8px">
+        <input class="fi" id="loc-input-hospital" placeholder="e.g. Derriford Hospital" style="flex:2" onkeydown="if(event.key==='Enter')addHospitalLocation()">
+        <input class="fi" id="loc-input-hosp-post" placeholder="Postcode e.g. PL6 8DH" style="flex:1" onkeydown="if(event.key==='Enter')addHospitalLocation()">
+        <button onclick="addHospitalLocation()" style="padding:9px 20px;background:#f5c518;border:none;color:#2c3145;font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;white-space:nowrap">+ ADD</button>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:12px">ENTER THE HOSPITAL NAME AND ITS POSTCODE TOGETHER — POSTCODE WILL AUTO-FILL WHEN YOU SELECT THE HOSPITAL IN THE DISPATCH FORM</div>
+      <div id="loc-list-hospital">
+        ${renderHospList(data.hospitals||data.hospital||[])}
+      </div>
+    </div>`;
+
   const cats = [
-    { key:'hospital', label:'Hospitals / Facilities', placeholder:'e.g. Derriford Hospital', icon:'' },
     { key:'ward', label:'Wards', placeholder:'e.g. Tamar Ward', icon:'' },
     { key:'address', label:'Addresses', placeholder:'e.g. Derriford Road, Plymouth', icon:'' },
     { key:'postcode', label:'Postcodes', placeholder:'e.g. PL6 8DH', icon:'' },
   ];
-  document.getElementById('loc-panels').innerHTML = cats.map(c => `
+  document.getElementById('loc-panels').innerHTML = hospHtml + cats.map(c => `
     <div class="form-panel" style="margin-bottom:18px">
       <div class="fp-title">${c.icon} ${c.label}</div>
       <div style="display:flex;gap:10px;margin-bottom:14px">
@@ -4621,6 +4730,61 @@ function renderLocationsView() {
       </div>
     </div>
   `).join('');
+}
+
+function renderHospList(items) {
+  if (!items.length) return `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:10px 0;letter-spacing:1px">NONE SAVED YET — ADD ONE ABOVE</div>`;
+  return items.map((v,i) => {
+    const name = typeof v === 'object' ? v.name : v;
+    const post = typeof v === 'object' ? (v.postcode||'') : '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);margin-bottom:5px">
+      <div>
+        <span style="font-size:13px;color:var(--text-bright)">${name}</span>
+        ${post?`<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#f5c518;margin-left:12px">${post}</span>`:'<span style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--muted);margin-left:12px">no postcode</span>'}
+      </div>
+      <button onclick="deleteHospLocation(${i})" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button>
+    </div>`;
+  }).join('');
+}
+
+function addHospitalLocation() {
+  const name = document.getElementById('loc-input-hospital').value.trim();
+  const post = document.getElementById('loc-input-hosp-post').value.trim().toUpperCase();
+  if (!name) { showToast('HOSPITAL NAME REQUIRED', 'warn'); return; }
+  const data = loadLocations();
+  if (!data.hospitals) data.hospitals = [];
+  // Also keep flat hospital array for backwards compat with autocomplete
+  if (!data.hospital) data.hospital = [];
+  const exists = data.hospitals.find(x => (typeof x === 'object' ? x.name : x).toLowerCase() === name.toLowerCase());
+  if (exists) { showToast('ALREADY SAVED', 'warn'); return; }
+  data.hospitals.unshift({ name, postcode: post });
+  // Also add name to flat hospital list
+  if (!data.hospital.includes(name)) data.hospital.unshift(name);
+  saveLocations(data);
+  document.getElementById('loc-input-hospital').value = '';
+  document.getElementById('loc-input-hosp-post').value = '';
+  document.getElementById('loc-list-hospital').innerHTML = renderHospList(data.hospitals);
+  showToast('SAVED: ' + name + (post ? ' — ' + post : ''), 'success');
+}
+
+function deleteHospLocation(idx) {
+  const data = loadLocations();
+  if (!data.hospitals) return;
+  const entry = data.hospitals[idx];
+  const name = typeof entry === 'object' ? entry.name : entry;
+  data.hospitals.splice(idx, 1);
+  data.hospital = (data.hospital||[]).filter(x => x !== name);
+  saveLocations(data);
+  document.getElementById('loc-list-hospital').innerHTML = renderHospList(data.hospitals||[]);
+  showToast('REMOVED: ' + name, 'warn');
+}
+
+// Get postcode for a hospital name from saved data
+function getHospPostcode(name) {
+  const data = loadLocations();
+  const hospitals = data.hospitals || [];
+  const match = hospitals.find(x => (typeof x === 'object' ? x.name : x).toLowerCase() === name.toLowerCase());
+  return match && typeof match === 'object' ? match.postcode : '';
 }
 
 function renderLocList(items, key) {
@@ -4657,6 +4821,449 @@ function deleteLocation(key, idx) {
 // Keep openLocationsManager pointing to showView for any old references
 function openLocationsManager() { showView('locations'); }
 function addManualLocation() {}
+
+// ======== SECTION PAPERWORK ========
+
+const EW_SECTIONS = {
+  'Section 2': {
+    full: 'Section 2 — Admission for Assessment',
+    duration: '28 days',
+    purpose: 'Detention for assessment (and treatment) of mental disorder.',
+    docs: [
+      'Application form (Form A2 or A3) — completed by AMHP or Nearest Relative',
+      'Two medical recommendations (Form A4 or A5) — from two doctors, one approved under S12',
+      'Completed by two separate doctors who have examined the patient',
+    ],
+    notes: 'Both medical recommendations must be signed within 5 days of each other. Original documents or certified copies must travel with the patient.',
+    crew: 'Ask ward staff for the original S2 documents or certified copies. These must travel with the patient and be handed to receiving ward.',
+  },
+  'Section 3': {
+    full: 'Section 3 — Admission for Treatment',
+    duration: 'Up to 6 months (renewable)',
+    purpose: 'Detention for treatment of mental disorder.',
+    docs: [
+      'Application form (Form A6 or A7) — completed by AMHP or Nearest Relative',
+      'Two medical recommendations (Form A8 or A9) — from two doctors, one S12 approved',
+      'Nearest Relative must not object',
+    ],
+    notes: 'The AMHP must consult with the Nearest Relative before applying. Paperwork must travel with patient.',
+    crew: 'Confirm S3 paperwork is present and take it with the patient. Receiving hospital will need to see these documents to accept the patient.',
+  },
+  'Section 4': {
+    full: 'Section 4 — Emergency Admission',
+    duration: '72 hours',
+    purpose: 'Emergency admission where S2 cannot be arranged quickly.',
+    docs: [
+      'Application form (Form A10) — completed by AMHP or Nearest Relative',
+      'One medical recommendation (Form A11) — from any doctor (does not need to be S12 approved)',
+    ],
+    notes: 'Only one medical recommendation needed. Doctor should have prior knowledge of the patient if possible.',
+    crew: 'Check one medical recommendation and the application are present. Receiving hospital should arrange S2 assessment on arrival.',
+  },
+  'Section 5(2)': {
+    full: 'Section 5(2) — Doctor\'s Holding Power',
+    duration: '72 hours',
+    purpose: 'Prevents an informal inpatient from leaving hospital while formal assessment is arranged.',
+    docs: [
+      'Form H1 — completed by the doctor in charge (or nominated deputy)',
+    ],
+    notes: 'This is a holding power only — not a full detention. Patient cannot be transferred under S5(2) alone — a full section should be applied before transfer.',
+    crew: 'Transfers under S5(2) alone are unusual. Confirm with controller that a full section is in place before transport.',
+  },
+  'Section 5(4)': {
+    full: 'Section 5(4) — Nurse\'s Holding Power',
+    duration: '6 hours',
+    purpose: 'Short-term hold by a qualified mental health nurse while a doctor is found.',
+    docs: [
+      'Form H2 — completed by the nurse',
+    ],
+    notes: 'Very short duration. Transfer under this power alone would be unusual — confirm with controller.',
+    crew: 'Check with controller before departure. A full section should normally be in place for a transfer.',
+  },
+  'Section 7': {
+    full: 'Section 7 — Guardianship',
+    duration: 'Up to 6 months (renewable)',
+    purpose: 'Places patient under guardianship — not detention in hospital.',
+    docs: [
+      'Application (Form G1 or G2)',
+      'Two medical recommendations (Form G3 or G4)',
+      'Local Authority acceptance',
+    ],
+    notes: 'Patient is not detained in hospital. Transfer involves moving to a guardian\'s address or care setting.',
+    crew: 'Confirm destination and guardianship documents. Patient is not formally detained but may need support.',
+  },
+  'Section 17': {
+    full: 'Section 17 — Leave of Absence',
+    duration: 'As specified by Responsible Clinician',
+    purpose: 'Allows a detained patient to leave hospital on authorised leave.',
+    docs: [
+      'Section 17 Leave Form — signed by the Responsible Clinician (RC)',
+      'Leave conditions document detailing any restrictions',
+    ],
+    notes: 'Crew should carry a copy of the leave form and be aware of any conditions (time limits, geographic restrictions, escort requirements).',
+    crew: 'Ask for the S17 leave form and read the conditions carefully. Note any time the patient must return by. If patient breaches conditions, contact controller immediately.',
+  },
+  'Section 17a': {
+    full: 'Section 17a — Community Treatment Order (CTO)',
+    duration: '6 months (renewable)',
+    purpose: 'Allows certain S3/S37 patients to live in the community under conditions.',
+    docs: [
+      'CTO Order form (Form CTO1)',
+      'Recall notice (Form CTO3) if patient is being recalled to hospital',
+    ],
+    notes: 'If transporting on a recall, the recall notice (CTO3) must be present.',
+    crew: 'For recall transfers, check the CTO3 recall notice is present. The receiving hospital needs this document.',
+  },
+  'Section 35': {
+    full: 'Section 35 — Remand to Hospital for Report',
+    duration: '28 days (renewable up to 12 weeks)',
+    purpose: 'Court remands accused person to hospital for psychiatric report.',
+    docs: [
+      'Court order (from Crown or Magistrates Court)',
+      'Medical evidence from one doctor',
+    ],
+    notes: 'This is a court order — the court paperwork must travel with the patient.',
+    crew: 'Court documentation must accompany the patient. Receiving hospital should be made aware this is a court-ordered admission.',
+  },
+  'Section 36': {
+    full: 'Section 36 — Remand to Hospital for Treatment',
+    duration: '28 days (renewable up to 12 weeks)',
+    purpose: 'Crown Court remands accused to hospital for treatment.',
+    docs: [
+      'Crown Court order',
+      'Two medical recommendations (one S12 approved)',
+    ],
+    notes: 'Crown Court only. Court order must travel with patient.',
+    crew: 'Crown Court paperwork must accompany the patient. Confirm with receiving unit they are expecting a court-ordered admission.',
+  },
+  'Section 37': {
+    full: 'Section 37 — Hospital Order',
+    duration: 'Up to 6 months (renewable)',
+    purpose: 'Court sentences convicted person to hospital rather than prison.',
+    docs: [
+      'Court order (from Crown or Magistrates Court)',
+      'Two medical recommendations',
+    ],
+    notes: 'May be accompanied by a Section 41 Restriction Order — check for this.',
+    crew: 'Check if a S41 restriction order is also in place. Court order must travel with patient.',
+  },
+  'Section 41': {
+    full: 'Section 41 — Restriction Order',
+    duration: 'Specified by Crown Court or unlimited',
+    purpose: 'Restricts discharge, transfer and leave of a S37 patient. Crown Court only.',
+    docs: [
+      'Crown Court restriction order',
+      'Ministry of Justice (MoJ) consent may be required for transfer',
+    ],
+    notes: 'Transfer of a S37/S41 patient may require MoJ approval. Confirm this has been obtained before transport.',
+    crew: 'Confirm MoJ consent is in place before transport. Crown Court paperwork must travel with patient. Contact controller if unsure.',
+  },
+  'Section 47': {
+    full: 'Section 47 — Transfer from Prison (Sentenced Prisoner)',
+    duration: 'Until sentence expires or no longer requires treatment',
+    purpose: 'Transfers a sentenced prisoner to psychiatric hospital for treatment.',
+    docs: [
+      'Ministry of Justice warrant (Form PF1)',
+      'Two medical recommendations',
+    ],
+    notes: 'MoJ warrant is essential. This is a prison to hospital transfer.',
+    crew: 'MoJ warrant must travel with the patient. Receiving hospital needs this. May be accompanied by prison escort — coordinate with controller.',
+  },
+  'Section 48': {
+    full: 'Section 48 — Transfer from Prison (Unsentenced)',
+    duration: 'Until court proceedings concluded',
+    purpose: 'Emergency transfer of unsentenced prisoner (remand) to psychiatric hospital.',
+    docs: [
+      'Ministry of Justice warrant (Form PF1)',
+      'Two medical recommendations (one S12 approved)',
+    ],
+    notes: 'MoJ warrant required. Patient is unsentenced so may still have court appearances.',
+    crew: 'MoJ warrant must travel with patient. Confirm with controller whether court appearances are pending.',
+  },
+  'Section 135': {
+    full: 'Section 135 — Warrant to Enter Premises',
+    duration: 'Single use',
+    purpose: 'Allows police to enter premises and remove person to place of safety.',
+    docs: [
+      'Magistrate\'s warrant (held by police)',
+      'Mental health professional must be present',
+    ],
+    notes: 'Police-led. Crew may assist with transport but police hold the warrant.',
+    crew: 'Police will hold the warrant. Your role is transport support. Confirm destination place of safety with controller.',
+  },
+  'Section 136': {
+    full: 'Section 136 — Police Power — Place of Safety',
+    duration: '24 hours (extendable to 36 hours)',
+    purpose: 'Police remove person from public place to place of safety for assessment.',
+    docs: [
+      'Police documentation of the detention (S136 form)',
+      'No court order required',
+    ],
+    notes: 'Police documentation travels with patient. Assessment must happen within 24 hours.',
+    crew: 'Police will have their S136 paperwork. Your role is transport. Confirm receiving place of safety is expecting the patient.',
+  },
+};
+
+const SCOT_SECTIONS = {
+  'STDC': {
+    full: 'Short Term Detention Certificate (STDC)',
+    duration: '28 days',
+    purpose: 'Scottish equivalent of Section 2. Detention for assessment and treatment.',
+    docs: [
+      'STDC certificate — signed by a psychiatrist',
+      'Mental Health Officer (MHO) must have consented',
+      'Nurse consultation (if practicable)',
+    ],
+    notes: 'Signed by one psychiatrist plus MHO consent. Similar to S2 but under Scots law.',
+    crew: 'Check STDC certificate is present and travels with patient. Receiving unit needs to see this.',
+  },
+  'EDD': {
+    full: 'Emergency Detention Certificate (EDC)',
+    duration: '72 hours',
+    purpose: 'Scottish equivalent of Section 4. Emergency detention where STDC cannot be arranged.',
+    docs: [
+      'EDC certificate — signed by any doctor',
+      'MHO involvement required unless impracticable',
+      'MHO consultation noted on certificate',
+    ],
+    notes: 'One doctor only. MHO must be consulted if practicable.',
+    crew: 'EDC must travel with patient. Receiving unit should arrange full assessment on arrival.',
+  },
+  'CTO': {
+    full: 'Compulsory Treatment Order (CTO)',
+    duration: '6 months (renewable)',
+    purpose: 'Scottish equivalent of Section 3. Long-term compulsory treatment.',
+    docs: [
+      'CTO granted by Mental Health Tribunal for Scotland',
+      'Mental Health Tribunal order document',
+      'Care plan attached to the order',
+    ],
+    notes: 'Granted by Tribunal not a doctor. Paperwork is the Tribunal order.',
+    crew: 'Tribunal order must travel with patient. Receiving hospital will need to see this to accept the patient.',
+  },
+  'Section 297': {
+    full: 'Section 297 — Police Power (Place of Safety)',
+    duration: '24 hours',
+    purpose: 'Scottish equivalent of Section 136. Police remove person to place of safety.',
+    docs: [
+      'Police documentation of the detention',
+    ],
+    notes: 'Police-led. Assessment must occur within 24 hours.',
+    crew: 'Police hold the documentation. Confirm receiving place of safety is expecting patient.',
+  },
+  'Assessment Order': {
+    full: 'Assessment Order',
+    duration: '28 days',
+    purpose: 'Scottish court-ordered admission for assessment. Equivalent of S35.',
+    docs: [
+      'Sheriff Court order',
+      'Medical evidence from one psychiatrist',
+    ],
+    notes: 'Court order must travel with patient.',
+    crew: 'Sheriff Court paperwork must accompany patient.',
+  },
+  'Treatment Order': {
+    full: 'Treatment Order',
+    duration: 'Up to 12 weeks',
+    purpose: 'Scottish court-ordered treatment. Equivalent of S36.',
+    docs: [
+      'Sheriff Court or Court of Session order',
+      'Two medical recommendations',
+    ],
+    notes: 'Court order must travel with patient.',
+    crew: 'Court paperwork must accompany patient. Confirm receiving unit is expecting court-ordered admission.',
+  },
+  'Interim CTO': {
+    full: 'Interim Compulsory Treatment Order',
+    duration: 'Up to 56 days',
+    purpose: 'Temporary order while full CTO application is being considered by Tribunal.',
+    docs: [
+      'Interim CTO order from Mental Health Tribunal',
+    ],
+    notes: 'Tribunal order must travel with patient.',
+    crew: 'Tribunal interim order must travel with patient.',
+  },
+};
+
+function getPaperworkBlock(j) {
+  const sections = Array.isArray(j.mhaSection) ? j.mhaSection : (j.mhaSection ? [j.mhaSection] : []);
+  const detained = j.isDetainedMHA;
+  if (!detained || detained === 'No' || !sections.length) return '';
+
+  // Detect if Scottish
+  const isScottish = sections.some(s => ['STDC','EDD','CTO','Section 297','Assessment Order','Treatment Order','Interim CTO'].includes(s));
+  const db = isScottish ? SCOT_SECTIONS : EW_SECTIONS;
+  const flag = isScottish ? '🏴󠁧󠁢󠁳󠁣󠁴󠁿 SCOTLAND' : '🏴󠁧󠁢󠁥󠁮󠁧󠁿 ENGLAND & WALES';
+
+  const items = sections.map(s => {
+    const info = db[s];
+    if (!info) return `<div style="padding:10px 0;border-bottom:1px solid var(--border2)">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#a78bfa">${s}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px">No specific paperwork guide available — check with controller.</div>
+    </div>`;
+
+    const docList = info.docs.map(d => `
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:5px">
+        <span style="color:#f5c518;font-size:12px;flex-shrink:0">✓</span>
+        <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text);line-height:1.5">${d}</span>
+      </div>`).join('');
+
+    return `<div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border2)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:#a78bfa;margin-bottom:2px">${info.full}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:10px">DURATION: ${info.duration}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:6px">DOCUMENTS TO COLLECT AT POINT 1</div>
+      ${docList}
+      <div style="background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);padding:10px 12px;margin-top:10px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);letter-spacing:2px;margin-bottom:4px"> CREW ACTION</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8cde0;line-height:1.6">${info.crew}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="ib" style="margin-bottom:14px;border-color:rgba(167,139,250,0.4)">
+    <div class="ib-title" style="color:#a78bfa"> Paperwork Required — ${flag}
+      <span style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);font-weight:400;letter-spacing:1px">MHA ${detained.toUpperCase()}</span>
+    </div>
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);padding:10px 12px;margin-bottom:14px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#fca5a5;line-height:1.6">
+       PAPERWORK MUST PHYSICALLY TRAVEL WITH THE PATIENT. VERIFY ALL DOCUMENTS BEFORE LEAVING POINT 1 AND HAND OVER AT POINT 2.
+    </div>
+    ${items}
+  </div>`;
+}
+
+// ---- SECTION GUIDE MODAL ----
+function openSectionGuide() {
+  // Render E&W content
+  document.getElementById('sg-ew-content').innerHTML = Object.entries(EW_SECTIONS).map(([key, s]) => `
+    <div style="background:var(--surface2);border:1px solid var(--border2);padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#a78bfa">${key}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px">${s.full}</div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 8px;border:1px solid rgba(167,139,250,0.3);color:#a78bfa;white-space:nowrap">${s.duration}</div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text);margin-bottom:8px;line-height:1.5">${s.purpose}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:6px">PAPERWORK NEEDED</div>
+      ${s.docs.map(d=>`<div style="display:flex;gap:6px;margin-bottom:4px"><span style="color:#f5c518">✓</span><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text);line-height:1.5">${d}</span></div>`).join('')}
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a94b8;margin-top:8px;font-style:italic;line-height:1.5">${s.notes}</div>
+    </div>`).join('');
+
+  // Render Scotland content
+  document.getElementById('sg-scot-content').innerHTML = Object.entries(SCOT_SECTIONS).map(([key, s]) => `
+    <div style="background:var(--surface2);border:1px solid var(--border2);padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#a78bfa">${key}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px">${s.full}</div>
+        </div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 8px;border:1px solid rgba(167,139,250,0.3);color:#a78bfa;white-space:nowrap">${s.duration}</div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text);margin-bottom:8px;line-height:1.5">${s.purpose}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:6px">PAPERWORK NEEDED</div>
+      ${s.docs.map(d=>`<div style="display:flex;gap:6px;margin-bottom:4px"><span style="color:#f5c518">✓</span><span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text);line-height:1.5">${d}</span></div>`).join('')}
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#8a94b8;margin-top:8px;font-style:italic;line-height:1.5">${s.notes}</div>
+    </div>`).join('');
+
+  setSectionTab('ew');
+  document.getElementById('section-guide-modal').style.display = 'flex';
+}
+
+function closeSectionGuide() {
+  document.getElementById('section-guide-modal').style.display = 'none';
+}
+
+function setSectionTab(tab) {
+  document.getElementById('sg-ew').style.display = tab === 'ew' ? 'block' : 'none';
+  document.getElementById('sg-scot').style.display = tab === 'scot' ? 'block' : 'none';
+  const ewBtn = document.getElementById('sg-tab-ew');
+  const scBtn = document.getElementById('sg-tab-scot');
+  if (tab === 'ew') {
+    ewBtn.style.background = 'rgba(167,139,250,0.15)'; ewBtn.style.borderColor = '#a78bfa'; ewBtn.style.color = '#a78bfa';
+    scBtn.style.background = 'none'; scBtn.style.borderColor = 'var(--border2)'; scBtn.style.color = 'var(--muted)';
+  } else {
+    scBtn.style.background = 'rgba(167,139,250,0.15)'; scBtn.style.borderColor = '#a78bfa'; scBtn.style.color = '#a78bfa';
+    ewBtn.style.background = 'none'; ewBtn.style.borderColor = 'var(--border2)'; ewBtn.style.color = 'var(--muted)';
+  }
+}
+
+// ---- ARCHIVE ----
+function renderArchiveView() {
+  const search = (document.getElementById('archive-search')?.value || '').toLowerCase();
+  let archived = jobs.filter(j => j.archived || j.invoiced);
+  if (search) {
+    archived = archived.filter(j =>
+      (j.suName||'').toLowerCase().includes(search) ||
+      (j.id||'').toLowerCase().includes(search) ||
+      (j.cad||'').toLowerCase().includes(search) ||
+      (j.agency||'').toLowerCase().includes(search) ||
+      (j.crew||'').toLowerCase().includes(search)
+    );
+  }
+  archived.sort((a,b) => (b.invoicedAt||b.completedAt||'') > (a.invoicedAt||a.completedAt||'') ? 1 : -1);
+  const count = document.getElementById('archive-count');
+  if (count) count.textContent = `// ${archived.length} RECORD${archived.length!==1?'S':''}`;
+  const list = document.getElementById('archive-list');
+  if (!list) return;
+  if (!archived.length) {
+    list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO ARCHIVED JOBS YET — JOBS MOVE HERE ONCE MARKED AS INVOICED</div>`;
+    return;
+  }
+  list.innerHTML = archived.map(j => `
+    <div style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid #8a94b8;padding:14px 18px;margin-bottom:8px;display:grid;grid-template-columns:120px 1fr 1fr auto auto;gap:12px;align-items:center">
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a94b8">${j.id}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px">${j.cad||'—'}</div>
+      </div>
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright)">${j.suName||'—'}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px">${j.fromHosp||'—'} → ${j.toHosp||'—'}</div>
+      </div>
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">AGENCY</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:2px">${j.agency||'—'}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#00e676;letter-spacing:1px">INVOICED</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">${j.invoicedAt||'—'}</div>
+      </div>
+      <div>
+        <button onclick="openModal('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">VIEW</button>
+      </div>
+    </div>`).join('');
+}
+
+// ---- BOOKING STATS ----
+function renderBookingStats() {
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  const weekAgo = new Date(now - 7*86400000).toISOString().slice(0,10);
+  const monthAgo = new Date(now - 30*86400000).toISOString().slice(0,10);
+
+  const toDate = b => b.submittedAt ? (b.submittedAt.split('/').length === 3
+    ? (() => { const parts = b.submittedAt.split(/[/ :]/); return new Date(parts[2],parts[1]-1,parts[0]).toISOString().slice(0,10); })()
+    : '') : '';
+
+  const today  = bookings.filter(b => toDate(b) === todayStr).length;
+  const week   = bookings.filter(b => toDate(b) >= weekAgo).length;
+  const month  = bookings.filter(b => toDate(b) >= monthAgo).length;
+  const total  = bookings.length;
+
+  return `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+      ${[
+        {label:'TODAY',   val:today,  col:'#f5c518'},
+        {label:'7 DAYS',  val:week,   col:'#a78bfa'},
+        {label:'30 DAYS', val:month,  col:'#fb923c'},
+        {label:'ALL TIME',val:total,  col:'#8a94b8'},
+      ].map(s=>`
+        <div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid ${s.col};padding:14px 16px;text-align:center">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">${s.label}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;color:${s.col};line-height:1">${s.val}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px">BOOKING${s.val!==1?'S':''}</div>
+        </div>`).join('')}
+    </div>`;
+}
 
 // ---- SERVICE WORKER ----
 if ('serviceWorker' in navigator) {
