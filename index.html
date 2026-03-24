@@ -534,7 +534,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
         <div class="f">
           <div class="fl">Postcode</div>
           <div class="ac-wrap">
-            <input class="fi" id="fi-from-post" placeholder="Postcode" autocomplete="off" oninput="acInput(this,'postcode')" onfocus="acInput(this,'postcode')" onblur="acBlur('ac-from-post')">
+            <input class="fi" id="fi-from-post" placeholder="Postcode" autocomplete="off" oninput="acInput(this,'postcode')" onfocus="acInput(this,'postcode')" onblur="acBlur('ac-from-post')" onchange="document.getElementById('fi-travel-from-post').value=this.value.trim()">
             <div class="ac-dropdown" id="ac-from-post"></div>
           </div>
         </div>
@@ -589,7 +589,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
         <div class="f">
           <div class="fl">Postcode</div>
           <div class="ac-wrap">
-            <input class="fi" id="fi-to-post" placeholder="Postcode" autocomplete="off" oninput="acInput(this,'postcode')" onfocus="acInput(this,'postcode')" onblur="acBlur('ac-to-post')">
+            <input class="fi" id="fi-to-post" placeholder="Postcode" autocomplete="off" oninput="acInput(this,'postcode')" onfocus="acInput(this,'postcode')" onblur="acBlur('ac-to-post')" onchange="document.getElementById('fi-travel-to-post').value=this.value.trim()">
             <div class="ac-dropdown" id="ac-to-post"></div>
           </div>
         </div>
@@ -1896,7 +1896,11 @@ function startFirebaseListeners() {
       if (match) jid = Math.max(jid, parseInt(match[1]));
     });
     if (role === 'controller') { renderJobsTable(); updateStats(); if(document.getElementById('home-view').style.display!=='none') renderHomeDashboard(); }
-    else if (role === 'crew') { renderCrewJobs(); setTimeout(restoreSigs, 80); }
+    else if (role === 'crew') {
+      // Only full re-render if no cards are open (preserves tab state)
+      const anyOpen = Object.values(openCards).some(v => v);
+      if (!anyOpen) { renderCrewJobs(); setTimeout(restoreSigs, 80); }
+    }
   });
 
   db.ref('locations').on('value', snap => {
@@ -1965,11 +1969,14 @@ function loadLocations() {
 }
 
 function saveLocations(data) {
-  db.ref('locations').set(data);
+  window._locCache = data;
+  db.ref('locations').set(data).catch(err => {
+    showToast('ERROR SAVING LOCATIONS — ' + err.code, 'warn');
+    console.error('saveLocations error:', err);
+  });
 }
 
 
-// ---- LOGIN ----
 function selRole(r) {
   role = r;
   document.getElementById('role-ctrl').classList.toggle('selected', r==='controller');
@@ -2718,7 +2725,7 @@ function renderCrewJobs() {
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;border-radius:20px;background:${scol}22;border:1px solid ${scol};color:${scol};font-weight:700">${statusLabels2[j.status]||j.status.toUpperCase()}</span>
+          <span class="status-pill-hdr" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;border-radius:20px;background:${scol}22;border:1px solid ${scol};color:${scol};font-weight:700">${statusLabels2[j.status]||j.status.toUpperCase()}</span>
           <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">${dueFmt}</span>
           <span class="card-chevron" style="color:var(--muted);font-size:16px">${isOpen ? '▲' : '▼'}</span>
         </div>
@@ -2821,46 +2828,88 @@ function renderCrewJobs() {
 
             <div style="border-top:1px solid var(--border);margin:14px 0 12px"></div>
             <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:10px">BODY MAP — MARK ANY INJURIES OR CONCERNS AT COLLECTION</div>
-            <div style="display:flex;gap:16px;align-items:flex-start">
-              <div style="position:relative;flex-shrink:0;width:100px">
-                <svg viewBox="0 0 100 280" style="width:100px;display:block" xmlns="http://www.w3.org/2000/svg">
+            <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+              <div style="position:relative;flex-shrink:0">
+                <svg viewBox="0 0 220 320" style="width:220px;display:block" xmlns="http://www.w3.org/2000/svg">
+                  <!-- FRONT VIEW -->
                   <!-- Head -->
-                  <circle cx="50" cy="22" r="18" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <ellipse cx="55" cy="18" rx="14" ry="16" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Neck -->
-                  <line x1="43" y1="39" x2="43" y2="52" stroke="#6b7a99" stroke-width="1.5"/>
-                  <line x1="57" y1="39" x2="57" y2="52" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M47 33 L47 42 Q55 45 63 42 L63 33" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Shoulders -->
-                  <path d="M43 52 Q30 54 22 62" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
-                  <path d="M57 52 Q70 54 78 62" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <path d="M47 42 Q38 42 28 50 Q20 56 18 65" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M63 42 Q72 42 82 50 Q90 56 92 65" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Torso -->
-                  <path d="M22 62 Q18 80 19 110 L20 148 L80 148 L81 110 Q82 80 78 62 Z" fill="rgba(107,122,153,0.08)" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M28 50 Q24 70 24 95 Q24 115 26 130 L84 130 Q86 115 86 95 Q86 70 82 50" fill="rgba(107,122,153,0.07)" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Left arm -->
-                  <path d="M22 65 Q10 85 8 118 Q7 133 8 148" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <path d="M28 52 Q18 70 14 95 Q11 115 12 132" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Left hand -->
-                  <ellipse cx="8" cy="154" rx="6" ry="8" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M10 132 Q8 138 7 143 M12 132 Q11 139 10 144 M14 132 Q14 139 14 144 M16 132 Q17 138 18 143 M18 133 Q20 138 20 141" fill="none" stroke="#6b7a99" stroke-width="1"/>
+                  <path d="M7 143 Q10 147 14 146 Q18 146 20 143 Q18 133 12 132 Q9 131 7 143Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
                   <!-- Right arm -->
-                  <path d="M78 65 Q90 85 92 118 Q93 133 92 148" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <path d="M82 52 Q92 70 96 95 Q99 115 98 132" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Right hand -->
-                  <ellipse cx="92" cy="154" rx="6" ry="8" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M100 132 Q102 138 103 143 M98 132 Q99 139 100 144 M96 132 Q96 139 96 144 M94 132 Q93 138 92 143 M92 133 Q90 138 90 141" fill="none" stroke="#6b7a99" stroke-width="1"/>
+                  <path d="M103 143 Q100 147 96 146 Q92 146 90 143 Q92 133 98 132 Q101 131 103 143Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
+                  <!-- Hips -->
+                  <path d="M26 130 Q22 138 24 148 L86 148 Q88 138 84 130" fill="rgba(107,122,153,0.07)" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Left leg -->
-                  <path d="M38 148 Q34 185 32 215 Q30 240 30 262" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <path d="M38 148 Q34 185 32 220 Q30 250 30 278" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Left foot -->
-                  <path d="M26 262 Q24 270 22 274 L38 274 Q40 266 38 262 Z" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M27 278 Q24 284 22 290 Q28 292 35 290 Q37 284 36 278Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
                   <!-- Right leg -->
-                  <path d="M62 148 Q66 185 68 215 Q70 240 70 262" stroke="#6b7a99" stroke-width="1.5" fill="none"/>
+                  <path d="M72 148 Q76 185 78 220 Q80 250 80 278" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
                   <!-- Right foot -->
-                  <path d="M74 262 Q76 270 78 274 L62 274 Q60 266 62 262 Z" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M83 278 Q86 284 88 290 Q82 292 75 290 Q73 284 74 278Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
                   <!-- Centre line -->
-                  <line x1="50" y1="52" x2="50" y2="148" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
-                  <text x="50" y="278" text-anchor="middle" fill="#4a5270" font-size="7" font-family="monospace">FRONT VIEW</text>
+                  <line x1="55" y1="45" x2="55" y2="148" stroke="#3a4260" stroke-width="0.5" stroke-dasharray="3,3"/>
+                  <!-- Label -->
+                  <text x="55" y="308" text-anchor="middle" fill="#4a5270" font-size="8" font-family="monospace">FRONT</text>
+
+                  <!-- BACK VIEW (offset x+110) -->
+                  <!-- Head -->
+                  <ellipse cx="165" cy="18" rx="14" ry="16" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Neck -->
+                  <path d="M157 33 L157 42 Q165 45 173 42 L173 33" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Shoulders -->
+                  <path d="M157 42 Q148 42 138 50 Q130 56 128 65" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <path d="M173 42 Q182 42 192 50 Q200 56 202 65" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Torso back -->
+                  <path d="M138 50 Q134 70 134 95 Q134 115 136 130 L194 130 Q196 115 196 95 Q196 70 192 50" fill="rgba(107,122,153,0.07)" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Spine line -->
+                  <line x1="165" y1="45" x2="165" y2="130" stroke="#3a4260" stroke-width="0.5" stroke-dasharray="3,3"/>
+                  <!-- Left arm back -->
+                  <path d="M138 52 Q128 70 124 95 Q121 115 122 132" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Left hand back -->
+                  <path d="M120 132 Q118 138 117 143 M122 132 Q121 139 120 144 M124 132 Q124 139 124 144 M126 132 Q127 138 128 143 M128 133 Q130 138 130 141" fill="none" stroke="#6b7a99" stroke-width="1"/>
+                  <path d="M117 143 Q120 147 124 146 Q128 146 130 143 Q128 133 122 132 Q119 131 117 143Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
+                  <!-- Right arm back -->
+                  <path d="M192 52 Q202 70 206 95 Q209 115 208 132" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Right hand back -->
+                  <path d="M210 132 Q212 138 213 143 M208 132 Q209 139 210 144 M206 132 Q206 139 206 144 M204 132 Q203 138 202 143 M202 133 Q200 138 200 141" fill="none" stroke="#6b7a99" stroke-width="1"/>
+                  <path d="M213 143 Q210 147 206 146 Q202 146 200 143 Q202 133 208 132 Q211 131 213 143Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
+                  <!-- Hips back -->
+                  <path d="M136 130 Q132 138 134 148 L196 148 Q198 138 194 130" fill="rgba(107,122,153,0.07)" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Gluteal line -->
+                  <path d="M140 148 Q155 158 165 155 Q175 158 190 148" fill="none" stroke="#6b7a99" stroke-width="1"/>
+                  <!-- Left leg back -->
+                  <path d="M148 148 Q144 185 142 220 Q140 250 140 278" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Left foot back -->
+                  <path d="M137 278 Q134 284 132 290 Q138 292 145 290 Q147 284 146 278Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
+                  <!-- Right leg back -->
+                  <path d="M182 148 Q186 185 188 220 Q190 250 190 278" fill="none" stroke="#6b7a99" stroke-width="1.5"/>
+                  <!-- Right foot back -->
+                  <path d="M193 278 Q196 284 198 290 Q192 292 185 290 Q183 284 184 278Z" fill="none" stroke="#6b7a99" stroke-width="1.2"/>
+                  <!-- Label -->
+                  <text x="165" y="308" text-anchor="middle" fill="#4a5270" font-size="8" font-family="monospace">BACK</text>
                 </svg>
-                <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:100px;height:calc(100% - 12px);cursor:crosshair;touch-action:none;opacity:0.85"
+                <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:220px;height:calc(100% - 16px);cursor:crosshair;touch-action:none;opacity:0.85"
                   onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
                   ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
               </div>
-              <div style="flex:1">
-                <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:10px">Tap or draw on the body outline to mark any injuries, marks or concerns observed at collection.</div>
-                <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;width:100%">CLEAR MARKS</button>
+              <div style="flex:1;min-width:120px">
+                <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:12px">Tap or draw on either view to mark injuries, bruising or concerns at collection.</div>
+                <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;width:100%">CLEAR ALL MARKS</button>
               </div>
             </div>
           </div>
@@ -3074,16 +3123,40 @@ function saveObs(id, idx, field, val) { const j=jobs.find(j=>j.id===id); if(j&&j
 
 function updStatus(id, s) {
   const j = jobs.find(j=>j.id===id); if(!j) return;
-  j.status=s;
+  j.status = s;
   const t = new Date().toLocaleTimeString('en-GB',{hour12:false});
-  if(s==='enroute') j.enrouteAt=t;
-  if(s==='onsite') j.onsiteAt=t;
-  if(s==='complete') j.completedAt=t;
-  openCards[id]=true;
+  if(s==='enroute') j.enrouteAt = t;
+  if(s==='onsite') j.onsiteAt = t;
+  if(s==='complete') j.completedAt = t;
   saveJobs();
-  renderCrewJobs(); updateStats();
+  updateStats();
   if(role==='controller') renderJobsTable();
-  showToast('STATUS → '+s.toUpperCase(),'success');
+  showToast('STATUS → ' + s.toUpperCase(), 'success');
+
+  // Update status buttons in place — no full re-render
+  const card = document.getElementById('card-' + id);
+  if (!card) { renderCrewJobs(); return; }
+
+  // Update status pill in header
+  const scol = {dispatched:'#f5c518', enroute:'#fb923c', onsite:'#a78bfa', complete:'#00e676'}[s] || '#8a94b8';
+  const slbl = {dispatched:'DISPATCHED', enroute:'EN ROUTE', onsite:'ON SITE', complete:'COMPLETE'}[s] || s.toUpperCase();
+  const pill = card.querySelector('.status-pill-hdr');
+  if (pill) { pill.textContent = slbl; pill.style.background = scol + '22'; pill.style.borderColor = scol; pill.style.color = scol; }
+
+  // Update status bar buttons
+  const order = ['enroute','onsite','complete'];
+  const btns = card.querySelectorAll('.crew-status-btn');
+  const statusOrder = ['dispatched','enroute','onsite','complete'];
+  const ci = statusOrder.indexOf(s);
+  btns.forEach((btn, i) => {
+    btn.classList.remove('csb-active','csb-done','csb-disabled');
+    btn.disabled = true;
+    if (i === ci - 1) { btn.classList.add('csb-active'); btn.disabled = false; }
+    else if (i < ci - 1) btn.classList.add('csb-done');
+    else btn.classList.add('csb-disabled');
+  });
+  // Special: if just dispatched, enable first button
+  if (s === 'dispatched' && btns[0]) { btns[0].classList.remove('csb-disabled'); btns[0].classList.add('csb-active'); btns[0].disabled = false; }
 }
 
 // ---- CONTROLLER DETAIL MODAL ----
@@ -3565,7 +3638,10 @@ function loadLocations() {
 }
 
 function saveLocations(data) {
-  db.ref('locations').set(data);
+  window._locCache = data;
+  db.ref('locations').set(data).catch(err => {
+    showToast('ERROR SAVING LOCATIONS — ' + err.code, 'warn');
+  });
 }
 
 function addToStore(type, value) {
@@ -3640,13 +3716,22 @@ function acSelect(ddId, value) {
   // Auto-fill linked postcode if this is a hospital field
   if (ddId === 'ac-from-hosp') {
     const pc = getHospPostcode(value);
-    if (pc) { const el = document.getElementById('fi-from-post'); if(el && !el.value) el.value = pc; }
+    if (pc) {
+      const el = document.getElementById('fi-from-post');
+      if (el && !el.value) {
+        el.value = pc;
+        document.getElementById('fi-travel-from-post').value = pc;
+      }
+    }
   } else if (ddId === 'ac-to-hosp') {
     const pc = getHospPostcode(value);
-    if (pc) { const el = document.getElementById('fi-to-post'); if(el && !el.value) el.value = pc; }
-  } else if (ddId === 'ac-agency') {
-    const pc = getHospPostcode(value);
-    // agency doesn't have a postcode field but that's fine
+    if (pc) {
+      const el = document.getElementById('fi-to-post');
+      if (el && !el.value) {
+        el.value = pc;
+        document.getElementById('fi-travel-to-post').value = pc;
+      }
+    }
   }
 }
 
@@ -5129,6 +5214,8 @@ function renderIncidentsView() {
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           ${inc.status==='new'?`<button onclick="markIncidentReviewed('${inc.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid rgba(0,230,118,0.3);color:var(--green);cursor:pointer;letter-spacing:1px">MARK REVIEWED</button>`:'<span style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--green);padding:6px 0"> REVIEWED</span>'}
+          <button onclick="downloadIncidentPDF('${inc.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px"> PDF</button>
+          <button onclick="deleteIncident('${inc.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button>
         </div>
       </div>
       <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8cde0;line-height:1.7;margin-bottom:8px">${inc.description}</div>
@@ -5145,6 +5232,127 @@ function renderIncidentsView() {
 function markIncidentReviewed(id) {
   db.ref('incidents/' + id + '/status').set('reviewed');
   showToast('MARKED AS REVIEWED', 'success');
+}
+
+function deleteIncident(id) {
+  if (!confirm('Delete this incident report? This cannot be undone.')) return;
+  db.ref('incidents/' + id).remove().then(() => {
+    showToast('INCIDENT REPORT DELETED', 'warn');
+  });
+}
+
+function downloadIncidentPDF(id) {
+  const inc = incidents.find(i => i.id === id);
+  if (!inc) return;
+
+  const sevCol = { Low:'#16a34a', Medium:'#d97706', High:'#ea580c', Critical:'#dc2626' };
+  const col = sevCol[inc.severity] || '#6b7280';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Incident Report ${inc.id}</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:Arial,sans-serif; font-size:12px; color:#111; background:#fff; }
+    .page { max-width:210mm; margin:0 auto; padding:14mm; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1a1e2e; padding-bottom:16px; margin-bottom:20px; }
+    .co-name { font-size:24px; font-weight:900; letter-spacing:3px; color:#1a1e2e; }
+    .co-name span { color:#d97706; }
+    .co-sub { font-size:9px; color:#6b7280; letter-spacing:2px; margin-top:2px; }
+    .doc-title { text-align:right; }
+    .doc-title h1 { font-size:22px; font-weight:900; color:#1a1e2e; letter-spacing:2px; }
+    .doc-ref { font-size:12px; color:${col}; font-weight:700; margin-top:4px; }
+    .severity-badge { display:inline-block; padding:4px 12px; background:${col}; color:#fff; font-size:11px; font-weight:700; letter-spacing:2px; margin-top:6px; }
+    .section { margin-bottom:16px; }
+    .section-title { font-size:9px; font-weight:700; letter-spacing:3px; color:#6b7280; text-transform:uppercase; margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid #e5e7eb; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; margin-bottom:8px; }
+    .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px 20px; }
+    .field-label { font-size:9px; color:#9ca3af; letter-spacing:1px; text-transform:uppercase; margin-bottom:2px; }
+    .field-val { font-size:12px; font-weight:600; color:#111; }
+    .desc-box { background:#f9fafb; border:1px solid #e5e7eb; padding:12px 14px; font-size:12px; line-height:1.7; color:#374151; white-space:pre-wrap; }
+    .alert-box { background:#fef2f2; border-left:4px solid ${col}; padding:10px 14px; margin-bottom:16px; font-size:11px; color:#7f1d1d; font-weight:600; letter-spacing:1px; }
+    .footer { margin-top:24px; padding-top:10px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; font-size:9px; color:#9ca3af; }
+    .sig-line { border-top:1px solid #111; margin-top:40px; padding-top:4px; font-size:9px; color:#6b7280; }
+    @media print { body{-webkit-print-color-adjust:exact;print-color-adjust:exact} }
+  </style></head><body><div class="page">
+
+  <div class="header">
+    <div>
+      <div class="co-name">CITADEL<span>SECURE</span></div>
+      <div class="co-sub">SECURE PATIENT TRANSPORT</div>
+    </div>
+    <div class="doc-title">
+      <h1>INCIDENT REPORT</h1>
+      <div class="doc-ref">${inc.id}</div>
+      <div class="severity-badge">${inc.severity||'UNGRADED'}</div>
+    </div>
+  </div>
+
+  ${inc.severity === 'Critical' || inc.severity === 'High' ? `<div class="alert-box"> HIGH SEVERITY INCIDENT — REQUIRES IMMEDIATE MANAGEMENT REVIEW AND ACTION</div>` : ''}
+
+  <div class="section">
+    <div class="section-title">Incident Details</div>
+    <div class="grid">
+      <div><div class="field-label">Incident Type</div><div class="field-val">${inc.type||'—'}</div></div>
+      <div><div class="field-label">Severity</div><div class="field-val" style="color:${col}">${inc.severity||'—'}</div></div>
+      <div><div class="field-label">Date & Time</div><div class="field-val">${inc.datetime||'—'}</div></div>
+      <div><div class="field-label">Location</div><div class="field-val">${inc.location||'—'}</div></div>
+      <div><div class="field-label">Job Reference</div><div class="field-val">${inc.jobRef||'—'}</div></div>
+      <div><div class="field-label">Status</div><div class="field-val">${inc.status==='reviewed'?'Reviewed':'Pending Review'}</div></div>
+    </div>
+    <div class="grid-3" style="margin-top:8px">
+      <div><div class="field-label">Police Called</div><div class="field-val">${inc.police||'No'}</div></div>
+      <div><div class="field-label">Injuries</div><div class="field-val">${inc.injury||'No'}</div></div>
+      <div><div class="field-label">Witnesses</div><div class="field-val">${inc.witnesses||'None recorded'}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Description of Incident</div>
+    <div class="desc-box">${inc.description||'—'}</div>
+  </div>
+
+  ${inc.actions ? `<div class="section">
+    <div class="section-title">Actions Taken</div>
+    <div class="desc-box">${inc.actions}</div>
+  </div>` : ''}
+
+  <div class="section">
+    <div class="section-title">Submitted By</div>
+    <div class="grid">
+      <div><div class="field-label">Staff Member</div><div class="field-val">${inc.submittedBy?.toUpperCase()||'—'}</div></div>
+      <div><div class="field-label">Submitted At</div><div class="field-val">${inc.submittedAt||'—'}</div></div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:30px">
+    <div class="section-title">Signatures</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:10px">
+      <div>
+        <div class="sig-line">Reporting Staff Signature</div>
+        <div style="font-size:9px;color:#6b7280;margin-top:4px">Name: ${inc.submittedBy?.toUpperCase()||'—'}</div>
+      </div>
+      <div>
+        <div class="sig-line">Manager / Controller Signature</div>
+        <div style="font-size:9px;color:#6b7280;margin-top:4px">Name: _________________________ &nbsp; Date: _____________</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>CITADEL SECURE — CONFIDENTIAL</span>
+    <span>${inc.id} | Generated: ${new Date().toLocaleDateString('en-GB')}</span>
+    <span>RETAIN FOR COMPLIANCE</span>
+  </div>
+
+  </div><scr`+`ipt>window.onload=()=>window.print();</scr`+`ipt></body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Citadel-Incident-${inc.id}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('INCIDENT REPORT DOWNLOADED — ' + inc.id, 'success');
 }
 
 // ======== REPEAT BOOKING ========
