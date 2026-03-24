@@ -3620,18 +3620,20 @@ function upcomingCard(j) {
 
 function bookingHomeCard(b) {
   const dueFmt = b.due ? new Date(b.due).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) + ' ' + new Date(b.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
-  return `<div onclick="openBookingModal('${b.id}')" style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid #fb923c;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background='var(--surface)'">
+  return `<div onclick="activeBookingId='${b.id}';openEditBookingModal()" style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid #fb923c;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:background 0.15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background='var(--surface)'">
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;flex-wrap:wrap">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright)">${b.callerName||'—'}</div>
         ${b.org?`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">${b.org}</div>`:''}
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid rgba(251,146,60,0.4);color:#fb923c">PENDING</div>
       </div>
       <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8cde0">SU: ${b.suName||'—'} &nbsp;|&nbsp; ${b.fromHosp||'—'} → ${b.toHosp||'—'}</div>
       ${b.tel?`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#fb923c;margin-top:2px">${b.tel}</div>`:''}
     </div>
     <div style="text-align:right;flex-shrink:0">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text)">${dueFmt}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text)">${b.due && !isNaN(new Date(b.due)) ? new Date(b.due).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' '+new Date(b.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : b.due||'—'}</div>
       <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px">${b.id}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#a78bfa;margin-top:4px"> CLICK TO EDIT</div>
     </div>
   </div>`;
 }
@@ -4183,9 +4185,9 @@ function renderBookingsView() {
 }
 
 function openBookingModal(id) {
+  try {
   const b = bookings.find(x => x.id === id);
   if (!b) {
-    // Try refreshing bookings from Firebase then retry once
     db.ref('bookings/' + id).once('value', snap => {
       const data = snap.val();
       if (data) {
@@ -4205,7 +4207,11 @@ function openBookingModal(id) {
   if (bma) bma.style.display = 'grid';
   if (bmd) bmd.style.display = 'none';
 
-  const dueFmt = b.due ? new Date(b.due).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' at ' + new Date(b.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '—';
+  const due = b.due || '';
+  const dueDate = due ? new Date(due) : null;
+  const dueFmt = dueDate && !isNaN(dueDate)
+    ? dueDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' at ' + dueDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+    : '—';
 
   document.getElementById('booking-modal-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;margin-bottom:16px">
@@ -4283,6 +4289,10 @@ function openBookingModal(id) {
     })() : ''}
   `;
   document.getElementById('booking-modal').style.display = 'flex';
+  } catch(err) {
+    console.error('openBookingModal error:', err);
+    showToast('ERROR OPENING BOOKING — CHECK CONSOLE', 'warn');
+  }
 }
 
 function closeBookingModal() {
