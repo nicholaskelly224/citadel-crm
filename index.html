@@ -220,15 +220,41 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
 
 /* ---- CREW VIEW ---- */
 #crew-view { display:none; }
-.crew-card { background:var(--surface); border:1px solid var(--border); border-left:4px solid #f5c518; margin-bottom:14px; animation:cardIn 0.3s ease; }
+.crew-card { background:var(--surface); border:1px solid var(--border); border-left:4px solid #f5c518; margin-bottom:16px; animation:cardIn 0.3s ease; border-radius:4px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.25); }
 @keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 .crew-card.tb-bedwatch-c { border-left-color:var(--warn); }
-.crew-card.complete-c { border-left-color:var(--green); opacity:0.7; }
-.crew-card-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--surface2); border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
-.crew-card-hdr-l { display:flex; align-items:center; gap:12px; }
-.crew-card-title { font-family:'Rajdhani',sans-serif; font-size:17px; font-weight:700; color:var(--text-bright); letter-spacing:1px; }
-.crew-card-body { display:none; padding:20px; }
+.crew-card.complete-c { border-left-color:var(--green); opacity:0.75; }
+.crew-card-hdr { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; background:var(--surface2); border-bottom:1px solid var(--border); cursor:pointer; user-select:none; gap:12px; }
+.crew-card-hdr-l { display:flex; align-items:center; gap:12px; flex-wrap:wrap; min-width:0; }
+.crew-card-title { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; color:var(--text-bright); letter-spacing:1px; }
+.crew-card-body { display:none; }
 .crew-card-body.open { display:block; }
+
+/* STATUS BUTTONS — big tap targets */
+.crew-status-bar { display:grid; grid-template-columns:1fr 1fr 1fr; }
+.crew-status-btn { padding:18px 8px; font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; letter-spacing:1px; border:none; border-right:1px solid var(--border); cursor:pointer; transition:all 0.2s; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); background:var(--surface2); }
+.crew-status-btn:last-child { border-right:none; }
+.crew-status-btn .csb-icon { font-size:22px; }
+.crew-status-btn.csb-active { background:#f5c518; color:#1a1e2e; }
+.crew-status-btn.csb-done { background:rgba(0,230,118,0.12); color:#00e676; cursor:not-allowed; }
+.crew-status-btn.csb-disabled { opacity:0.4; cursor:not-allowed; }
+
+/* CREW TABS */
+.crew-tabs { display:flex; background:var(--surface2); border-bottom:1px solid var(--border); border-top:1px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+.crew-tabs::-webkit-scrollbar { display:none; }
+.crew-tab { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:1px; padding:13px 16px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.2s; flex:1; background:none; border-top:none; border-left:none; border-right:none; text-align:center; }
+.crew-tab:hover { color:var(--text); background:rgba(255,255,255,0.03); }
+.crew-tab.active { color:#f5c518; border-bottom-color:#f5c518; background:rgba(245,197,24,0.06); font-weight:700; }
+.crew-tab-panel { display:none; padding:16px; }
+.crew-tab-panel.active { display:block; }
+
+/* CREW INFO ROWS */
+.ci-row { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border2); gap:12px; }
+.ci-row:last-child { border-bottom:none; }
+.ci-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1px; white-space:nowrap; flex-shrink:0; padding-top:2px; }
+.ci-val { font-size:14px; font-weight:500; color:var(--text-bright); text-align:right; line-height:1.4; }
+.ci-section { background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:14px 16px; margin-bottom:12px; }
+.ci-section-title { font-family:'Share Tech Mono',monospace; font-size:9px; color:#f5c518; letter-spacing:3px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
 
 /* INFO BLOCKS */
 .ib-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
@@ -335,6 +361,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <button class="logout-btn" onclick="showView('leads')" id="btn-leads" style="display:none;border-color:rgba(20,184,166,0.4);color:#2dd4bf"> LEADS</button>
       <button class="logout-btn" onclick="showView('completed')" id="btn-completed" style="display:none;border-color:rgba(0,230,118,0.3);color:var(--green)"> COMPLETED JOBS</button>
       <button class="logout-btn" onclick="showView('invoice')" id="btn-invoice" style="display:none;border-color:rgba(245,197,24,0.4);color:#f5c518"> INVOICING</button>
+      <button class="logout-btn" onclick="showView('incidents')" id="btn-incidents" style="display:none;border-color:rgba(239,68,68,0.4);color:var(--danger)"> INCIDENTS <span id="incidents-badge" style="display:none;background:var(--danger);color:#fff;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:4px;font-weight:700"></span></button>
       <button class="logout-btn" onclick="showView('archive')" id="btn-archive" style="display:none;border-color:rgba(138,148,184,0.3);color:#8a94b8"> ARCHIVE</button>
       <button class="logout-btn" onclick="showView('locations')" id="btn-locations" style="display:none;border-color:rgba(245,197,24,0.3);color:#f5c518"> MANAGE LOCATIONS</button>
       <button class="logout-btn" onclick="location.reload()">LOGOUT</button>
@@ -729,9 +756,13 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <!-- ADDITIONAL NOTES -->
     <div class="form-panel">
       <div class="fp-title"> Additional Notes</div>
-      <div class="f">
-        <div class="fl">Notes for Crew</div>
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Notes for Crew <span style="color:var(--muted);font-size:9px;letter-spacing:0">— visible to crew on their task card</span></div>
         <textarea class="fta" id="fi-misc" placeholder="Any additional information for the crew..."></textarea>
+      </div>
+      <div class="f">
+        <div class="fl" style="color:#fb923c"> Controller Notes <span style="color:var(--muted);font-size:9px;letter-spacing:0">— PRIVATE, crew cannot see these</span></div>
+        <textarea class="fta" id="fi-ctrl-notes" placeholder="Internal notes — not shared with crew..." style="border-color:rgba(251,146,60,0.3)"></textarea>
       </div>
     </div>
 
@@ -1538,6 +1569,13 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div id="loc-panels"></div>
   </div>
 
+  <!-- INCIDENTS VIEW -->
+  <div id="incidents-view" class="view-wrap" style="display:none">
+    <div class="section-title">INCIDENT REPORTS <span id="incidents-count"></span></div>
+    <p style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">INCIDENTS SUBMITTED BY CREW — REVIEW AND ACTION AS REQUIRED.</p>
+    <div id="incidents-list"></div>
+  </div>
+
   <!-- ARCHIVE VIEW -->
   <div id="archive-view" class="view-wrap" style="display:none">
     <div class="section-title">ARCHIVE <span id="archive-count"></span></div>
@@ -1562,15 +1600,110 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
   </div>
 
   <div id="invoice-view" class="view-wrap" style="display:none">
-    <div class="section-title">READY FOR INVOICING <span id="invoice-count"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+      <div class="section-title" style="margin-bottom:0">READY FOR INVOICING <span id="invoice-count"></span></div>
+      <button onclick="generateInvoicePDF()" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px 18px;background:#f5c518;color:#1a1e2e;border:none;cursor:pointer;letter-spacing:1px;font-weight:700"> GENERATE INVOICE PDF</button>
+    </div>
     <div id="invoice-list"></div>
   </div>
   <div id="crew-view" class="view-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
       <div class="section-title" style="margin-bottom:0">MY TASKS <span id="crew-name-tag"></span></div>
-      <button onclick="openSectionGuide()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(167,139,250,0.5);color:#a78bfa;cursor:pointer;letter-spacing:1px"> SECTION REFERENCE GUIDE</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openIncidentModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(239,68,68,0.5);color:var(--danger);cursor:pointer;letter-spacing:1px"> REPORT INCIDENT</button>
+        <button onclick="openSectionGuide()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(167,139,250,0.5);color:#a78bfa;cursor:pointer;letter-spacing:1px"> SECTION GUIDE</button>
+      </div>
     </div>
     <div id="crew-jobs-list"><div class="empty">NO JOBS ASSIGNED</div></div>
+  </div>
+</div>
+
+<!-- INCIDENT REPORT MODAL -->
+<div id="incident-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9960;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#2c3145;border:2px solid rgba(239,68,68,0.4);max-width:620px;width:100%;padding:26px 28px;margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--danger);letter-spacing:2px"> INCIDENT REPORT</div>
+      <button onclick="closeIncidentModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+    </div>
+
+    <div class="form-panel" style="margin-bottom:16px;border-top-color:rgba(239,68,68,0.5)">
+      <div class="fp-title red"> Incident Details</div>
+      <div class="fg fg-2" style="margin-bottom:14px">
+        <div class="f"><div class="fl">Job Reference</div>
+          <select class="fs" id="inc-job-ref">
+            <option value="">— Select Job —</option>
+          </select>
+        </div>
+        <div class="f"><div class="fl">Date & Time of Incident</div>
+          <input type="datetime-local" class="fi" id="inc-datetime">
+        </div>
+      </div>
+      <div class="fg fg-2" style="margin-bottom:14px">
+        <div class="f"><div class="fl">Location of Incident</div>
+          <input class="fi" id="inc-location" placeholder="Where did it happen?">
+        </div>
+        <div class="f"><div class="fl">Type of Incident <span style="color:var(--danger)">*</span></div>
+          <select class="fs" id="inc-type">
+            <option value="">— Select Type —</option>
+            <option>Physical Assault on Staff</option>
+            <option>Verbal Assault on Staff</option>
+            <option>Physical Assault on Service User</option>
+            <option>Self Harm — Service User</option>
+            <option>Attempted Escape / Abscond</option>
+            <option>Restraint Used</option>
+            <option>Medication Incident</option>
+            <option>Road Traffic Incident</option>
+            <option>Equipment Failure</option>
+            <option>Safeguarding Concern</option>
+            <option>Near Miss</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg fg-3" style="margin-bottom:14px">
+        <div class="f"><div class="fl">Severity</div>
+          <div class="radio-group" style="padding-top:6px">
+            <label class="radio-opt"><input type="radio" name="inc-severity" value="Low"> Low</label>
+            <label class="radio-opt"><input type="radio" name="inc-severity" value="Medium"> Medium</label>
+            <label class="radio-opt"><input type="radio" name="inc-severity" value="High"> High</label>
+            <label class="radio-opt"><input type="radio" name="inc-severity" value="Critical"> Critical</label>
+          </div>
+        </div>
+        <div class="f"><div class="fl">Were Police Called?</div>
+          <div class="radio-group" style="padding-top:6px">
+            <label class="radio-opt"><input type="radio" name="inc-police" value="Yes"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="inc-police" value="No" checked> No</label>
+          </div>
+        </div>
+        <div class="f"><div class="fl">Was Anyone Injured?</div>
+          <div class="radio-group" style="padding-top:6px">
+            <label class="radio-opt"><input type="radio" name="inc-injury" value="Yes"> Yes</label>
+            <label class="radio-opt"><input type="radio" name="inc-injury" value="No" checked> No</label>
+          </div>
+        </div>
+      </div>
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Description of Incident <span style="color:var(--danger)">*</span></div>
+        <textarea class="fta" id="inc-description" placeholder="Describe exactly what happened, in chronological order..." style="min-height:100px;border-color:rgba(239,68,68,0.3)"></textarea>
+      </div>
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Actions Taken</div>
+        <textarea class="fta" id="inc-actions" placeholder="What actions were taken at the time?..." style="min-height:70px"></textarea>
+      </div>
+      <div class="f">
+        <div class="fl">Witnesses (names)</div>
+        <input class="fi" id="inc-witnesses" placeholder="Names of any witnesses">
+      </div>
+    </div>
+
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);padding:12px 16px;margin-bottom:20px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#fca5a5;line-height:1.6">
+       THIS REPORT WILL BE SENT TO THE CONTROLLER IMMEDIATELY. COMPLETE AS MUCH DETAIL AS POSSIBLE. A COPY WILL BE KEPT ON FILE.
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="closeIncidentModal()" style="flex:1;padding:13px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer">CANCEL</button>
+      <button onclick="submitIncidentReport()" style="flex:2;padding:13px;background:var(--danger);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> SUBMIT INCIDENT REPORT</button>
+    </div>
   </div>
 </div>
 
@@ -1928,6 +2061,7 @@ function doLogin() {
     document.getElementById('btn-locations').style.display = 'inline-block';
     document.getElementById('btn-completed').style.display = 'inline-block';
     document.getElementById('btn-invoice').style.display = 'inline-block';
+    document.getElementById('btn-incidents').style.display = 'inline-block';
     document.getElementById('btn-archive').style.display = 'inline-block';
     showView('home');
     renderJobsTable(); updateStats(); refreshCAD();
@@ -2411,6 +2545,7 @@ async function dispatchJob() {
     suNhs: gv('fi-su-nhs'), suBuild: gv('fi-su-build'), suHeight: gv('fi-su-height'),
     suGp: gv('fi-su-gp'), returning: gr('returning'),
     misc: gv('fi-misc'),
+    ctrlNotes: gv('fi-ctrl-notes'),
     status: 'dispatched',
     dispatchedAt: new Date().toLocaleTimeString('en-GB',{hour12:false}),
     enrouteAt: null, onsiteAt: null, completedAt: null,
@@ -2495,7 +2630,7 @@ function renderJobsTable() {
       <div class="jc" style="font-size:12px">${j.crew}${j.additionalStaff&&j.additionalStaff.length?`<span style="color:var(--muted);font-size:10px"> +${j.additionalStaff.length}</span>`:''}</div>
       <div class="jc" style="font-family:'Share Tech Mono',monospace;font-size:11px">${turnupFmt}</div>
       <div class="jc"><span class="status-pill sp-${j.status}">${slabels[j.status]}</span></div>
-      <div class="jc"><button class="view-btn" onclick="openModal('${j.id}')">VIEW</button></div>
+      <div class="jc" style="display:flex;flex-direction:column;gap:4px"><button class="view-btn" onclick="openModal('${j.id}')">VIEW</button><button class="view-btn" style="color:#a78bfa;border-color:rgba(167,139,250,0.4);font-size:9px" onclick="repeatBooking('${j.id}')">REPEAT</button></div>
     </div>`;
   }).join('');
 }
@@ -2556,312 +2691,332 @@ function renderCrewJobs() {
     </table>
     <button class="obs-add-btn" onclick="addObs('${j.id}')">+ ADD OBSERVATION</button>`;
 
+    const statusColors2 = {dispatched:'#f5c518', enroute:'#fb923c', onsite:'#a78bfa', complete:'#00e676'};
+    const statusLabels2 = {dispatched:'DISPATCHED', enroute:'EN ROUTE', onsite:'ON SITE', complete:'COMPLETE'};
+    const scol = statusColors2[j.status] || '#8a94b8';
+    const dueFmt = j.due && !isNaN(new Date(j.due)) ? new Date(j.due).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) + ' ' + new Date(j.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : (j.due||'—');
+    const tabId = 'tab-' + j.id;
+
     return `<div class="${cardCls}" id="card-${j.id}">
+
+      <!-- CARD HEADER -->
       <div class="crew-card-hdr" onclick="toggleCard('${j.id}')">
         <div class="crew-card-hdr-l">
-          <span class="job-id">${j.id}</span>
-          <span class="type-badge ${tbadge[j.taskType]||'tb-other'}">${j.taskType.toUpperCase()}</span>
-          <span class="crew-card-title">${j.suName}</span>
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <span class="crew-card-title">${j.suName||'—'}</span>
+              <span class="type-badge ${tbadge[j.taskType]||'tb-other'}">${(j.taskType||'').toUpperCase()}</span>
+            </div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted)">
+              ${j.fromHosp||'—'} <span style="color:var(--border2);margin:0 4px">→</span> ${j.toHosp||'—'}
+            </div>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <span class="status-pill sp-${j.status}">${slabels[j.status]}</span>
-          <span style="color:var(--muted);font-size:16px">${isOpen?'':''}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;border-radius:20px;background:${scol}22;border:1px solid ${scol};color:${scol};font-weight:700">${statusLabels2[j.status]||j.status.toUpperCase()}</span>
+          <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">${dueFmt}</span>
+          <span style="color:var(--muted);font-size:16px">${isOpen ? '▲' : '▼'}</span>
         </div>
       </div>
+
       <div class="crew-card-body ${isOpen?'open':''}" id="body-${j.id}">
 
-        <!-- STATUS PROGRESS -->
-        <div style="background:var(--surface2);border:1px solid var(--border);padding:16px;margin-bottom:16px">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">TASK PROGRESS</div>
-          <div class="timeline">${tl}</div>
-          <div class="crew-btns">
-            <button class="cbtn ${j.status==='dispatched'?'cbtn-enroute':'cbtn-off'}" ${j.status!=='dispatched'?'disabled':''} onclick="updStatus('${j.id}','enroute')"> EN ROUTE</button>
-            <button class="cbtn ${j.status==='enroute'?'cbtn-onsite':'cbtn-off'}" ${j.status!=='enroute'?'disabled':''} onclick="updStatus('${j.id}','onsite')"> ON SITE</button>
-            <button class="cbtn ${j.status==='onsite'?'cbtn-complete':'cbtn-off'}" ${j.status!=='onsite'?'disabled':''} onclick="updStatus('${j.id}','complete')"> COMPLETE</button>
-          </div>
+        <!-- STATUS BUTTONS — big tap targets -->
+        <div class="crew-status-bar" style="border-bottom:1px solid var(--border)">
+          <button class="crew-status-btn ${j.status==='dispatched'?'csb-active':j.status==='enroute'||j.status==='onsite'||j.status==='complete'?'csb-done':'csb-disabled'}"
+            ${j.status!=='dispatched'?'disabled':''} onclick="updStatus('${j.id}','enroute')">
+            <span class="csb-icon">🚗</span>EN ROUTE
+          </button>
+          <button class="crew-status-btn ${j.status==='enroute'?'csb-active':j.status==='onsite'||j.status==='complete'?'csb-done':'csb-disabled'}"
+            ${j.status!=='enroute'?'disabled':''} onclick="updStatus('${j.id}','onsite')">
+            <span class="csb-icon">📍</span>ON SITE
+          </button>
+          <button class="crew-status-btn ${j.status==='onsite'?'csb-active':j.status==='complete'?'csb-done':'csb-disabled'}"
+            ${j.status!=='onsite'?'disabled':''} onclick="updStatus('${j.id}','complete')">
+            <span class="csb-icon">✅</span>COMPLETE
+          </button>
         </div>
 
-        <!-- JOB INFO -->
-        <div class="ib-grid">
-          <div class="ib">
-            <div class="ib-title"> Task Detail</div>
-            <div class="ib-row"><span class="ib-label">Type</span><span class="ib-val"><span class="type-badge ${tbadge[j.taskType]}">${j.taskType.toUpperCase()}</span></span></div>
-            <div class="ib-row"><span class="ib-label">Turn Up</span><span class="ib-val" style="font-family:'Share Tech Mono',monospace;font-size:11px">${j.turnup?new Date(j.turnup).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}):'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Due</span><span class="ib-val" style="font-family:'Share Tech Mono',monospace;font-size:11px">${j.due?new Date(j.due).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}):'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Reason</span><span class="ib-val">${j.reason||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Vehicle Needs</span><span class="ib-val">${Array.isArray(j.vehicleNeeds)?j.vehicleNeeds.join(', '):(j.vehicleNeeds||'—')}</span></div>
-            <div class="ib-row"><span class="ib-label">Gender Pref</span><span class="ib-val">${j.genderPref||'N/A'}</span></div>
-            ${j.misc?`<div class="ib-row"><span class="ib-label">Notes</span><span class="ib-val" style="font-size:11px">${j.misc}</span></div>`:''}
+        <!-- TABS -->
+        <div class="crew-tabs">
+          <button class="crew-tab active" onclick="crewTab('${tabId}','overview',this)">OVERVIEW</button>
+          <button class="crew-tab" onclick="crewTab('${tabId}','locations',this)">LOCATIONS</button>
+          <button class="crew-tab" onclick="crewTab('${tabId}','patient',this)">PATIENT</button>
+          <button class="crew-tab" onclick="crewTab('${tabId}','risk',this)">RISK</button>
+          <button class="crew-tab" onclick="crewTab('${tabId}','forms',this)">FORMS</button>
+          <button class="crew-tab" onclick="crewTab('${tabId}','notes',this)">NOTES</button>
+        </div>
+
+        <!-- TAB: OVERVIEW -->
+        <div class="crew-tab-panel active" id="${tabId}-overview">
+          ${getPaperworkBlock(j)}
+          <div class="ci-section">
+            <div class="ci-section-title">TASK</div>
+            <div class="ci-row"><span class="ci-label">TYPE</span><span class="ci-val">${(j.taskType||'—').toUpperCase()}</span></div>
+            <div class="ci-row"><span class="ci-label">DATE / TIME</span><span class="ci-val" style="color:#f5c518">${dueFmt}</span></div>
+            ${j.reason?'<div class="ci-row"><span class="ci-label">REASON</span><span class="ci-val">'+j.reason+'</span></div>':''}
+            <div class="ci-row"><span class="ci-label">VEHICLE</span><span class="ci-val">${Array.isArray(j.vehicleNeeds)?j.vehicleNeeds.join(', '):(j.vehicleNeeds||'N/A')}</span></div>
+            <div class="ci-row"><span class="ci-label">LEAD ST</span><span class="ci-val">${j.crew||'—'}</span></div>
+            ${j.additionalStaff&&j.additionalStaff.length?'<div class="ci-row"><span class="ci-label">ADD. STAFF</span><span class="ci-val">'+j.additionalStaff.join(', ')+'</span></div>':''}
           </div>
-          <div class="ib">
-            <div class="ib-title gold"> Service User</div>
-            <div class="ib-row"><span class="ib-label">Name</span><span class="ib-val">${j.suName}</span></div>
-            <div class="ib-row"><span class="ib-label">Gender</span><span class="ib-val">${j.suGender||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">DOB</span><span class="ib-val">${j.suDob||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Age</span><span class="ib-val">${j.suAge||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Build / Height</span><span class="ib-val">${j.suBuild||'—'} / ${j.suHeight||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Nationality</span><span class="ib-val">${j.suNationality||'—'}</span></div>
-            <div class="ib-row">
-              <span class="ib-label">NHS / ID</span>
-              <span class="ib-val redacted" id="nhs-${j.id}" onclick="toggleNHS('${j.id}')">${j.suNhs?'':'—'}</span>
+          <div class="ci-section">
+            <div class="ci-section-title">ROUTE</div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center">
+              <div>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">COLLECTING FROM</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright)">${j.fromHosp||'—'}</div>
+                ${j.fromWard?'<div style="font-size:11px;color:var(--muted);">'+j.fromWard+'</div>':''}
+              </div>
+              <div style="font-size:24px;color:var(--border2)">→</div>
+              <div>
+                <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">CONVEYING TO</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright)">${j.toHosp||'—'}</div>
+                ${j.toWard?'<div style="font-size:11px;color:var(--muted);">'+j.toWard+'</div>':''}
+              </div>
             </div>
-            <div class="ib-row"><span class="ib-label">GP Code</span><span class="ib-val">${j.suGp||'—'}</span></div>
           </div>
-          <div class="ib">
-            <div class="ib-title"> Collecting From — Point 1</div>
-            <div class="ib-row"><span class="ib-label">Hospital</span><span class="ib-val">${j.fromHosp||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Ward</span><span class="ib-val">${j.fromWard||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Address</span><span class="ib-val" style="font-size:11px">${j.fromAddr||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Postcode</span><span class="ib-val">${j.fromPost||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">POC</span><span class="ib-val">${j.fromPoc||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Tel</span><span class="ib-val">${j.fromTel||'—'}</span></div>
-            <div style="border-top:1px solid var(--border);margin:10px 0 8px"></div>
-            <div class="ib-row" style="align-items:center">
-              <span class="ib-label">Arrived</span>
-              <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.fromArrive||''}" onchange="saveField('${j.id}','fromArrive',this.value)">
+          ${j.misc?'<div class="ci-section" style="border-color:rgba(245,197,24,0.3)"><div class="ci-section-title" style="color:#f5c518">NOTES FROM CONTROLLER</div><div style="font-size:13px;line-height:1.7;color:var(--text)">'+j.misc+'</div></div>':''}
+        </div>
+
+        <!-- TAB: LOCATIONS -->
+        <div class="crew-tab-panel" id="${tabId}-locations">
+          <div class="ci-section" style="border-color:rgba(245,197,24,0.3)">
+            <div class="ci-section-title" style="color:#f5c518">COLLECTING FROM — POINT 1</div>
+            <div class="ci-row"><span class="ci-label">HOSPITAL</span><span class="ci-val">${j.fromHosp||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">WARD</span><span class="ci-val">${j.fromWard||'—'}</span></div>
+            ${j.fromAddr?'<div class="ci-row"><span class="ci-label">ADDRESS</span><span class="ci-val">'+j.fromAddr+(j.fromPost?' '+j.fromPost:'')+'</span></div>':''}
+            ${j.fromPoc?'<div class="ci-row"><span class="ci-label">POC</span><span class="ci-val">'+j.fromPoc+(j.fromPocPos?' — '+j.fromPocPos:'')+'</span></div>':''}
+            ${j.fromTel?'<div class="ci-row"><span class="ci-label">TEL</span><span class="ci-val" style="color:#fb923c">'+j.fromTel+'</span></div>':''}
+            <div style="border-top:1px solid var(--border);margin:12px 0 10px"></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:10px">HANDOVER — RELEASING PARTY</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">FULL NAME</div>
+                <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Releasing party" value="${j.p1HandoverName||''}" onchange="saveField('${j.id}','p1HandoverName',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">POSITION</div>
+                <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Job title" value="${j.p1HandoverPosition||''}" onchange="saveField('${j.id}','p1HandoverPosition',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">DATE</div>
+                <input type="date" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p1HandoverDate||''}" onchange="saveField('${j.id}','p1HandoverDate',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">TIME</div>
+                <input type="time" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p1HandoverTime||''}" onchange="saveField('${j.id}','p1HandoverTime',this.value)"></div>
             </div>
-            <div class="ib-row" style="align-items:center;margin-top:6px">
-              <span class="ib-label">Departed</span>
-              <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.fromDepart||''}" onchange="saveField('${j.id}','fromDepart',this.value)">
-            </div>
-            <div style="border-top:1px solid rgba(245,197,24,0.3);margin:12px 0 8px"></div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:8px">HANDOVER — RELEASING PARTY</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-              <div><div class="fl" style="margin-bottom:4px">Full Name</div>
-                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Releasing party" value="${j.p1HandoverName||''}" onchange="saveField('${j.id}','p1HandoverName',this.value)"></div>
-              <div><div class="fl" style="margin-bottom:4px">Position</div>
-                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Job title" value="${j.p1HandoverPosition||''}" onchange="saveField('${j.id}','p1HandoverPosition',this.value)"></div>
-              <div><div class="fl" style="margin-bottom:4px">Date</div>
-                <input type="date" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p1HandoverDate||''}" onchange="saveField('${j.id}','p1HandoverDate',this.value)"></div>
-              <div><div class="fl" style="margin-bottom:4px">Time</div>
-                <input type="time" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p1HandoverTime||''}" onchange="saveField('${j.id}','p1HandoverTime',this.value)"></div>
-            </div>
-            <div class="fl" style="margin-bottom:4px">Signature</div>
-            <canvas id="sig-${j.id}-p1" style="width:100%;height:90px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:6px">SIGNATURE</div>
+            <canvas id="sig-${j.id}-p1" style="width:100%;height:100px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
               onmousedown="sigStart(event,'${j.id}-p1')" onmousemove="sigDraw(event,'${j.id}-p1')" onmouseup="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" onmouseleave="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')"
               ontouchstart="sigStart(event,'${j.id}-p1')" ontouchmove="sigDraw(event,'${j.id}-p1')" ontouchend="sigEnd('${j.id}-p1','p1HandoverSig','p1HandoverSigned')"></canvas>
-            <div style="display:flex;gap:8px;margin-top:5px;align-items:center">
-              <button onclick="sigClear('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 8px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer">CLEAR</button>
+            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+              <button onclick="sigClear('${j.id}-p1','p1HandoverSig','p1HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer">CLEAR</button>
               <span class="sig-status-${j.id}-p1" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${j.p1HandoverSigned?'var(--green)':'var(--muted)'}">${j.p1HandoverSigned?' SIGNED':'NOT YET SIGNED'}</span>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">ARRIVED</div>
+                <input type="time" class="fi" style="font-size:12px;padding:8px 10px;color:#f5c518" value="${j.fromArrive||''}" onchange="saveField('${j.id}','fromArrive',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">DEPARTED</div>
+                <input type="time" class="fi" style="font-size:12px;padding:8px 10px;color:#f5c518" value="${j.fromDepart||''}" onchange="saveField('${j.id}','fromDepart',this.value)"></div>
+            </div>
           </div>
-          <div class="ib">
-            <div class="ib-title"> Conveying To — Point 2</div>
-            <div class="ib-row"><span class="ib-label">Hospital</span><span class="ib-val">${j.toHosp||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Ward</span><span class="ib-val">${j.toWard||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Address</span><span class="ib-val" style="font-size:11px">${j.toAddr||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Postcode</span><span class="ib-val">${j.toPost||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">POC</span><span class="ib-val">${j.toPoc||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Tel</span><span class="ib-val">${j.toTel||'—'}</span></div>
-            <div style="border-top:1px solid var(--border);margin:10px 0 8px"></div>
-            <div class="ib-row" style="align-items:center">
-              <span class="ib-label">Arrived</span>
-              <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.toArrive||''}" onchange="saveField('${j.id}','toArrive',this.value)">
+
+          <div class="ci-section" style="border-color:rgba(167,139,250,0.3)">
+            <div class="ci-section-title" style="color:#a78bfa">CONVEYING TO — POINT 2</div>
+            <div class="ci-row"><span class="ci-label">HOSPITAL</span><span class="ci-val">${j.toHosp||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">WARD</span><span class="ci-val">${j.toWard||'—'}</span></div>
+            ${j.toAddr?'<div class="ci-row"><span class="ci-label">ADDRESS</span><span class="ci-val">'+j.toAddr+(j.toPost?' '+j.toPost:'')+'</span></div>':''}
+            ${j.toPoc?'<div class="ci-row"><span class="ci-label">POC</span><span class="ci-val">'+j.toPoc+(j.toPocPos?' — '+j.toPocPos:'')+'</span></div>':''}
+            ${j.toTel?'<div class="ci-row"><span class="ci-label">TEL</span><span class="ci-val" style="color:#fb923c">'+j.toTel+'</span></div>':''}
+            <div style="border-top:1px solid var(--border);margin:12px 0 10px"></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#a78bfa;letter-spacing:2px;margin-bottom:10px">HANDOVER — RECEIVING PARTY</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">FULL NAME</div>
+                <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Receiving party" value="${j.p2HandoverName||''}" onchange="saveField('${j.id}','p2HandoverName',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">POSITION</div>
+                <input class="fi" style="font-size:12px;padding:8px 10px" placeholder="Job title" value="${j.p2HandoverPosition||''}" onchange="saveField('${j.id}','p2HandoverPosition',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">DATE</div>
+                <input type="date" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p2HandoverDate||''}" onchange="saveField('${j.id}','p2HandoverDate',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">TIME</div>
+                <input type="time" class="fi" style="font-size:12px;padding:8px 10px" value="${j.p2HandoverTime||''}" onchange="saveField('${j.id}','p2HandoverTime',this.value)"></div>
             </div>
-            <div class="ib-row" style="align-items:center;margin-top:6px">
-              <span class="ib-label">Departed</span>
-              <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.toDepart||''}" onchange="saveField('${j.id}','toDepart',this.value)">
-            </div>
-            <div style="border-top:1px solid rgba(245,197,24,0.3);margin:12px 0 8px"></div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#f5c518;letter-spacing:2px;margin-bottom:8px">HANDOVER — RECEIVING PARTY</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-              <div><div class="fl" style="margin-bottom:4px">Full Name</div>
-                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Receiving party" value="${j.p2HandoverName||''}" onchange="saveField('${j.id}','p2HandoverName',this.value)"></div>
-              <div><div class="fl" style="margin-bottom:4px">Position</div>
-                <input class="fi" style="font-size:11px;padding:6px 8px" placeholder="Job title" value="${j.p2HandoverPosition||''}" onchange="saveField('${j.id}','p2HandoverPosition',this.value)"></div>
-              <div><div class="fl" style="margin-bottom:4px">Date</div>
-                <input type="date" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p2HandoverDate||''}" onchange="saveField('${j.id}','p2HandoverDate',this.value)"></div>
-              <div><div class="fl" style="margin-bottom:4px">Time</div>
-                <input type="time" class="fi" style="font-size:11px;padding:6px 8px" value="${j.p2HandoverTime||''}" onchange="saveField('${j.id}','p2HandoverTime',this.value)"></div>
-            </div>
-            <div class="fl" style="margin-bottom:4px">Signature</div>
-            <canvas id="sig-${j.id}-p2" style="width:100%;height:90px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:6px">SIGNATURE</div>
+            <canvas id="sig-${j.id}-p2" style="width:100%;height:100px;background:var(--surface3);border:1px solid var(--border2);display:block;cursor:crosshair;touch-action:none"
               onmousedown="sigStart(event,'${j.id}-p2')" onmousemove="sigDraw(event,'${j.id}-p2')" onmouseup="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" onmouseleave="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')"
               ontouchstart="sigStart(event,'${j.id}-p2')" ontouchmove="sigDraw(event,'${j.id}-p2')" ontouchend="sigEnd('${j.id}-p2','p2HandoverSig','p2HandoverSigned')"></canvas>
-            <div style="display:flex;gap:8px;margin-top:5px;align-items:center">
-              <button onclick="sigClear('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 8px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer">CLEAR</button>
+            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+              <button onclick="sigClear('${j.id}-p2','p2HandoverSig','p2HandoverSigned')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer">CLEAR</button>
               <span class="sig-status-${j.id}-p2" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${j.p2HandoverSigned?'var(--green)':'var(--muted)'}">${j.p2HandoverSigned?' SIGNED':'NOT YET SIGNED'}</span>
             </div>
-          </div>
-        ${j.hasPoint3 ? `
-        <div class="ib" style="margin-bottom:14px;border-color:rgba(192,132,252,0.3)">
-          <div class="ib-title" style="color:#c084fc"> Point 3 — Additional Stop</div>
-          <div class="ib-row"><span class="ib-label">Hospital</span><span class="ib-val">${j.p3Hosp||'—'}</span></div>
-          <div class="ib-row"><span class="ib-label">Ward</span><span class="ib-val">${j.p3Ward||'—'}</span></div>
-          <div class="ib-row"><span class="ib-label">Address</span><span class="ib-val" style="font-size:11px">${j.p3Addr||'—'}</span></div>
-          <div class="ib-row"><span class="ib-label">Postcode</span><span class="ib-val">${j.p3Post||'—'}</span></div>
-          <div class="ib-row"><span class="ib-label">POC</span><span class="ib-val">${j.p3Poc||'—'}</span></div>
-          <div class="ib-row"><span class="ib-label">Tel</span><span class="ib-val">${j.p3Tel||'—'}</span></div>
-          <div style="border-top:1px solid var(--border);margin:10px 0 8px"></div>
-          <div class="ib-row" style="align-items:center">
-            <span class="ib-label">Arrived</span>
-            <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.p3Arrive||''}" onchange="saveField('${j.id}','p3Arrive',this.value)">
-          </div>
-          <div class="ib-row" style="align-items:center;margin-top:6px">
-            <span class="ib-label">Departed</span>
-            <input type="time" style="background:var(--surface3);border:1px solid var(--border2);color:#f5c518;font-family:'Share Tech Mono',monospace;font-size:12px;padding:4px 8px;outline:none;width:110px" value="${j.p3Depart||''}" onchange="saveField('${j.id}','p3Depart',this.value)">
-          </div>
-        </div>` : ''}
-
-        <!-- HEALTH NOTES (Crew fills) -->
-        <div class="ib" style="margin-bottom:14px">
-          <div class="ib-title" style="color:#3dd6a0"> Health Notes — Crew to Complete</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div>
-              ${ynu('hasMobility',j.id,'Mobility / Comms Restrictions')}
-              <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If yes — detail" style="font-size:12px;padding:7px 10px" value="${j.mobilityDetail||''}" onchange="saveField('${j.id}','mobilityDetail',this.value)"></div>
-              ${ynu('isMedicated',j.id,'Is SU on Medication')}
-              <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If yes — detail" style="font-size:12px;padding:7px 10px" value="${j.medicatedDetail||''}" onchange="saveField('${j.id}','medicatedDetail',this.value)"></div>
-              ${ynu('medicationAccompanying',j.id,'Medication Accompanying SU')}
-            </div>
-            <div>
-              ${ynu('hasCapacity',j.id,'Does SU Have Capacity')}
-              <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If no — detail" style="font-size:12px;padding:7px 10px" value="${j.capacityDetail||''}" onchange="saveField('${j.id}','capacityDetail',this.value)"></div>
-              ${ynu('isSedated',j.id,'Is SU Sedated for Task')}
-              <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If yes — detail" style="font-size:12px;padding:7px 10px" value="${j.sedatedDetail||''}" onchange="saveField('${j.id}','sedatedDetail',this.value)"></div>
-              ${ynu('dnrForm',j.id,'DNR Form')}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">ARRIVED</div>
+                <input type="time" class="fi" style="font-size:12px;padding:8px 10px;color:#f5c518" value="${j.toArrive||''}" onchange="saveField('${j.id}','toArrive',this.value)"></div>
+              <div><div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">DEPARTED</div>
+                <input type="time" class="fi" style="font-size:12px;padding:8px 10px;color:#f5c518" value="${j.toDepart||''}" onchange="saveField('${j.id}','toDepart',this.value)"></div>
             </div>
           </div>
         </div>
 
-        <!-- PAPERWORK REQUIRED -->
-        ${getPaperworkBlock(j)}
+        <!-- TAB: PATIENT -->
+        <div class="crew-tab-panel" id="${tabId}-patient">
+          <div class="ci-section" style="border-color:rgba(245,197,24,0.4)">
+            <div class="ci-section-title" style="color:#f5c518">SERVICE USER</div>
+            <div class="ci-row"><span class="ci-label">FULL NAME</span><span class="ci-val" style="font-size:15px;font-weight:700">${j.suName||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">GENDER</span><span class="ci-val">${j.suGender||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">DOB</span><span class="ci-val">${j.suDob||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">AGE</span><span class="ci-val">${j.suAge||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">NATIONALITY</span><span class="ci-val">${j.suNationality||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">BUILD / HEIGHT</span><span class="ci-val">${j.suBuild||'—'} / ${j.suHeight||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">NHS / ID</span>
+              <span class="ib-val redacted" id="nhs-${j.id}" onclick="toggleNHS('${j.id}')">${j.suNhs?'':'—'}</span>
+            </div>
+            <div class="ci-row"><span class="ci-label">GP CODE</span><span class="ci-val">${j.suGp||'—'}</span></div>
+            ${j.supPass?'<div class="ci-row"><span class="ci-label">PASSENGERS</span><span class="ci-val">'+j.supPass+'</span></div>':''}
+          </div>
+          <div class="ci-section">
+            <div class="ci-section-title">HEALTH NOTES</div>
+            ${ynu('hasMobility',j.id,'Mobility / Comms Restrictions')}
+            <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If yes — detail" style="font-size:12px;padding:8px 10px" value="${j.mobilityDetail||''}" onchange="saveField('${j.id}','mobilityDetail',this.value)"></div>
+            ${ynu('isMedicated',j.id,'SU on Medication')}
+            <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If yes — medication name/detail" style="font-size:12px;padding:8px 10px" value="${j.medicatedDetail||''}" onchange="saveField('${j.id}','medicatedDetail',this.value)"></div>
+            ${ynu('medicationAccompanying',j.id,'Medication Accompanying SU')}
+            ${ynu('hasCapacity',j.id,'SU Has Capacity')}
+            <div style="margin:4px 0 10px 0"><input class="fi" placeholder="If no — detail" style="font-size:12px;padding:8px 10px" value="${j.capacityDetail||''}" onchange="saveField('${j.id}','capacityDetail',this.value)"></div>
+            ${ynu('isSedated',j.id,'SU Sedated for Task')}
+            ${ynu('dnrForm',j.id,'DNR Form Present')}
+          </div>
+          <div class="ci-section">
+            <div class="ci-section-title">BODY MAP — MARK ANY INJURIES AT COLLECTION</div>
+            <div style="display:flex;gap:16px;align-items:flex-start">
+              <div style="position:relative;flex-shrink:0">
+                <svg viewBox="0 0 120 360" style="width:90px;display:block" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="60" cy="22" rx="16" ry="20" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <rect x="53" y="41" width="14" height="10" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M30 51 Q22 62 20 100 L22 158 L98 158 L100 100 Q98 62 90 51 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M30 54 Q16 70 12 108 Q10 128 12 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <ellipse cx="12" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M90 54 Q104 70 108 108 Q110 128 108 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <ellipse cx="108" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M44 158 Q40 200 38 240 Q36 272 36 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M33 300 Q30 308 27 313 Q36 316 44 313 Q46 307 44 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M76 158 Q80 200 82 240 Q84 272 84 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <path d="M87 300 Q90 308 93 313 Q84 316 76 313 Q74 307 76 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
+                  <line x1="60" y1="51" x2="60" y2="158" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
+                  <text x="60" y="350" text-anchor="middle" fill="#4a5270" font-size="8" font-family="monospace">FRONT</text>
+                </svg>
+                <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:90px;height:calc(100% - 16px);cursor:crosshair;touch-action:none;opacity:0.9"
+                  onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
+                  ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
+              </div>
+              <div>
+                <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;margin-bottom:8px;display:block">CLEAR MAP</button>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);line-height:1.6">TAP OR CLICK TO MARK INJURIES OR CONCERNS</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <!-- RISK ASSESSMENT — Read only, set by controller -->
-        <div class="ib" style="margin-bottom:14px;border-color:rgba(255,59,59,0.3)">
-          <div class="ib-title red"> Risk Assessment — Set by Controller</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
-            <div class="ib-row"><span class="ib-label">MHA Detained</span><span class="ib-val">${j.isDetainedMHA||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Section</span><span class="ib-val">${Array.isArray(j.mhaSection)?j.mhaSection.join(', '):(j.mhaSection||'—')}</span></div>
-            <div class="ib-row"><span class="ib-label">Diagnosis</span><span class="ib-val">${Array.isArray(j.diagnosis)?j.diagnosis.join(', '):(j.diagnosis||'—')}</span></div>
-            <div class="ib-row"><span class="ib-label">Presentation</span><span class="ib-val">${j.presentation||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">COVID Status</span><span class="ib-val">${j.covidPositive||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">History of Violence</span><span class="ib-val">${j.historyViolence||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Protection Plan</span><span class="ib-val">${j.protectionPlan||'—'}</span></div>
-            <div class="ib-row"><span class="ib-label">Infections/Allergies</span><span class="ib-val">${j.infections||'—'}</span></div>
+        <!-- TAB: RISK -->
+        <div class="crew-tab-panel" id="${tabId}-risk">
+          <div class="ci-section" style="border-color:rgba(239,68,68,0.3)">
+            <div class="ci-section-title" style="color:var(--danger)">RISK ASSESSMENT — SET BY CONTROLLER</div>
+            <div class="ci-row"><span class="ci-label">MHA DETAINED</span><span class="ci-val">${j.isDetainedMHA||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">SECTION</span><span class="ci-val" style="color:#f5c518">${Array.isArray(j.mhaSection)?j.mhaSection.join(', '):(j.mhaSection||'—')}</span></div>
+            <div class="ci-row"><span class="ci-label">DIAGNOSIS</span><span class="ci-val">${Array.isArray(j.diagnosis)?j.diagnosis.join(', '):(j.diagnosis||'—')}</span></div>
+            <div class="ci-row"><span class="ci-label">PRESENTATION</span><span class="ci-val">${j.presentation||'—'}</span></div>
+            ${j.triggers?'<div class="ci-row"><span class="ci-label">TRIGGERS</span><span class="ci-val" style="color:var(--warn)">'+j.triggers+'</span></div>':''}
+            ${j.infections?'<div class="ci-row"><span class="ci-label">INFECTIONS</span><span class="ci-val">'+j.infections+'</span></div>':''}
+            <div class="ci-row"><span class="ci-label">HIST. VIOLENCE</span><span class="ci-val">${j.historyViolence||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">COVID</span><span class="ci-val">${j.covidPositive||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">PROTECTION PLAN</span><span class="ci-val">${j.protectionPlan||'—'}</span></div>
           </div>
-          ${j.triggers?`<div class="ib-row" style="margin-bottom:12px"><span class="ib-label">Triggers</span><span class="ib-val" style="color:var(--warn)">${j.triggers}</span></div>`:''}
-          <div style="overflow-x:auto">
-            <table class="risk-table">
-              <tr><th>Acts of Risk</th><th>Unlikely</th><th>Possible</th><th>Likely</th><th>Highly Likely</th><th>Unknown</th></tr>
-              ${['selfHarm','suicide','resistance','aggression','violence','escape'].map((r,ri)=>{
-                const rLabels=['Self Harm','Suicide','Resistance','Aggression','Violence','Escape'];
-                const rLevels=['Unlikely','Possible','Likely','Highly Likely','Unknown'];
-                const rColors={'Unlikely':'#00e676','Possible':'#f5c518','Likely':'#f97316','Highly Likely':'#ef4444','Unknown':'#8a94b8'};
-                return `<tr><td>${rLabels[ri]}</td>${rLevels.map(l=>{
-                  const active = j.risks && j.risks[r]===l;
-                  return `<td style="text-align:center">${active
-                    ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${rColors[l]};box-shadow:0 0 6px ${rColors[l]}"></span>`
-                    : `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2)"></span>`
-                  }</td>`;
-                }).join('')}</tr>`;
-              }).join('')}
-            </table>
+          <div class="ci-section" style="border-color:rgba(239,68,68,0.3)">
+            <div class="ci-section-title" style="color:var(--danger)">RISK MATRIX</div>
+            <div style="overflow-x:auto">${riskTableHtml}</div>
           </div>
-          <div style="margin-top:14px">
-            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Restrictive Measures Used (Use of Force) — Crew to Log</div>
+          <div class="ci-section">
+            <div class="ci-section-title">SEARCHING</div>
+            <div class="check-group" style="margin-bottom:8px">
+              <label class="check-opt"><input type="radio" name="${j.id}-search" value="No Search" ${j.searching==='No Search'?'checked':''} onchange="saveField('${j.id}','searching','No Search')"> No Search</label>
+              <label class="check-opt"><input type="radio" name="${j.id}-search" value="Search with Consent" ${j.searching==='Search with Consent'?'checked':''} onchange="saveField('${j.id}','searching','Search with Consent')"> With Consent</label>
+              <label class="check-opt"><input type="radio" name="${j.id}-search" value="Search without Consent" ${j.searching==='Search without Consent'?'checked':''} onchange="saveField('${j.id}','searching','Search without Consent')"> Without Consent</label>
+            </div>
+          </div>
+          <div class="ci-section">
+            <div class="ci-section-title">RESTRICTIVE MEASURES USED</div>
             ${restrictiveHtml}
-            <textarea class="fta" style="margin-top:8px;font-size:12px" placeholder="Detail reason for applying any restrictive measures..." onchange="saveField('${j.id}','restrictiveReason',this.value)">${j.restrictiveReason||''}</textarea>
+            <textarea class="fta" style="margin-top:10px;font-size:12px" placeholder="Detail reason for any restrictive measures used..." onchange="saveField('${j.id}','restrictiveReason',this.value)">${j.restrictiveReason||''}</textarea>
           </div>
         </div>
 
-        <!-- SEARCHING (Crew fills) -->
-        <div class="ib" style="margin-bottom:14px">
-          <div class="ib-title"> Searching</div>
-          <div class="check-group" style="margin-bottom:8px">
-            <label class="check-opt"><input type="radio" name="${j.id}-search" value="No Search" ${j.searching==='No Search'?'checked':''} onchange="saveField('${j.id}','searching','No Search')"> No Search</label>
-            <label class="check-opt"><input type="radio" name="${j.id}-search" value="Search with Consent" ${j.searching==='Search with Consent'?'checked':''} onchange="saveField('${j.id}','searching','Search with Consent')"> With Consent</label>
-            <label class="check-opt"><input type="radio" name="${j.id}-search" value="Without Consent" ${j.searching==='Without Consent'?'checked':''} onchange="saveField('${j.id}','searching','Without Consent')"> Without Consent</label>
-            <label class="check-opt"><input type="radio" name="${j.id}-search" value="By Force" ${j.searching==='By Force'?'checked':''} onchange="saveField('${j.id}','searching','By Force')"> By Force</label>
-            &nbsp;&nbsp;
-            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">BODY CAM:</span>
-            <label class="check-opt"><input type="radio" name="${j.id}-cam" value="yes" ${j.bodyCamera==='yes'?'checked':''} onchange="saveField('${j.id}','bodyCamera','yes')"> Yes</label>
-            <label class="check-opt"><input type="radio" name="${j.id}-cam" value="no" ${j.bodyCamera==='no'?'checked':''} onchange="saveField('${j.id}','bodyCamera','no')"> No</label>
-          </div>
-          <textarea class="fta" style="font-size:12px" placeholder="Detail reason for your actions..." onchange="saveField('${j.id}','searchDetail',this.value)">${j.searchDetail||''}</textarea>
-        </div>
-
-        <!-- OBSERVATIONS -->
-        <div class="ib" style="margin-bottom:14px">
-          <div class="ib-title" style="color:var(--warn)"> Observations — Every 15 mins or as required</div>
-          ${obsHtml}
-        </div>
-
-        <!-- EMERGENCY SERVICES -->
-        <div class="ib" style="margin-bottom:14px">
-          <div class="ib-title red"> Emergency Services</div>
-          <div class="radio-group" style="margin-bottom:10px">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">INVOLVED IN TASK?</span>
-            <label class="radio-opt"><input type="radio" name="${j.id}-es" value="yes" ${j.emergencyServices==='yes'?'checked':''} onchange="saveField('${j.id}','emergencyServices','yes')"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="${j.id}-es" value="no" ${j.emergencyServices==='no'?'checked':''} onchange="saveField('${j.id}','emergencyServices','no')"> No</label>
-            &nbsp;
-            <label class="check-opt"><input type="checkbox" ${(j.esPolice||false)?'checked':''} onchange="saveField('${j.id}','esPolice',this.checked)"> Police</label>
-            <label class="check-opt"><input type="checkbox" ${(j.esAmbulance||false)?'checked':''} onchange="saveField('${j.id}','esAmbulance',this.checked)"> Ambulance</label>
-            <label class="check-opt"><input type="checkbox" ${(j.esFire||false)?'checked':''} onchange="saveField('${j.id}','esFire',this.checked)"> Fire</label>
-          </div>
-          <input class="fi" style="font-size:12px;padding:7px 10px;margin-bottom:8px" placeholder="Detail ID numbers for services involved" value="${j.emergencyDetail||''}" onchange="saveField('${j.id}','emergencyDetail',this.value)">
-          <textarea class="fta" style="font-size:12px" placeholder="Detail why services were involved..." onchange="saveField('${j.id}','emergencyReason',this.value)">${j.emergencyReason||''}</textarea>
-        </div>
-
-        <!-- BLUE LIGHT -->
-        <div class="ib" style="margin-bottom:14px">
-          <div class="ib-title" style="color:#f5c518"> Blue Light Use (BLU)</div>
-          <div class="radio-group">
-            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">RESPONDING:</span>
-            <label class="radio-opt"><input type="radio" name="${j.id}-blr" value="yes" ${j.blueLightResponding==='yes'?'checked':''} onchange="saveField('${j.id}','blueLightResponding','yes')"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="${j.id}-blr" value="no" ${j.blueLightResponding==='no'?'checked':''} onchange="saveField('${j.id}','blueLightResponding','no')"> No</label>
-            &nbsp;&nbsp;
-            <span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">CONVEYING:</span>
-            <label class="radio-opt"><input type="radio" name="${j.id}-blc" value="yes" ${j.blueLightConveying==='yes'?'checked':''} onchange="saveField('${j.id}','blueLightConveying','yes')"> Yes</label>
-            <label class="radio-opt"><input type="radio" name="${j.id}-blc" value="no" ${j.blueLightConveying==='no'?'checked':''} onchange="saveField('${j.id}','blueLightConveying','no')"> No</label>
-          </div>
-          <input class="fi" style="font-size:12px;padding:7px 10px;margin-top:8px" placeholder="Detail driver name(s) and reasons for BLU..." value="${j.blueLightDetail||''}" onchange="saveField('${j.id}','blueLightDetail',this.value)">
-        </div>
-
-        <!-- LEAD ST SUMMARY -->
-        <div class="ib" style="margin-bottom:14px;border-color:rgba(0,230,118,0.2)">
-          <div class="ib-title" style="color:var(--green)"> Lead ST Summary</div>
-          <textarea class="fta" placeholder="Lead ST summary of the task..." onchange="saveField('${j.id}','leadStSummary',this.value)">${j.leadStSummary||''}</textarea>
-        </div>
-
-        <!-- BODY MAP — standalone below handover sections -->
-        <div class="ib" style="margin-bottom:0">
-          <div class="ib-title"> Body Map — Mark any injuries / concerns at collection</div>
-          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
-            <div style="position:relative;display:inline-block">
-              <svg viewBox="0 0 120 360" style="width:110px;display:block" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="60" cy="22" rx="16" ry="20" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <rect x="53" y="41" width="14" height="10" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M30 51 Q22 62 20 100 L22 158 L98 158 L100 100 Q98 62 90 51 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M30 54 Q16 70 12 108 Q10 128 12 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <ellipse cx="12" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M90 54 Q104 70 108 108 Q110 128 108 142" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <ellipse cx="108" cy="148" rx="6" ry="8" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M44 158 Q40 200 38 240 Q36 272 36 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M33 300 Q30 308 27 313 Q36 316 44 313 Q46 307 44 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M76 158 Q80 200 82 240 Q84 272 84 300" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <path d="M87 300 Q90 308 93 313 Q84 316 76 313 Q74 307 76 300 Z" fill="none" stroke="#8a94b8" stroke-width="1.5"/>
-                <line x1="60" y1="51" x2="60" y2="158" stroke="#4a5270" stroke-width="0.5" stroke-dasharray="3,3"/>
-                <text x="60" y="350" text-anchor="middle" fill="#4a5270" font-size="8" font-family="monospace">FRONT</text>
-              </svg>
-              <canvas id="bmap-${j.id}" style="position:absolute;top:0;left:0;width:110px;height:calc(100% - 16px);cursor:crosshair;touch-action:none;opacity:0.9"
-                onmousedown="bmapStart(event,'${j.id}')" onmousemove="bmapDraw(event,'${j.id}')" onmouseup="bmapEnd('${j.id}')" onmouseleave="bmapEnd('${j.id}')"
-                ontouchstart="bmapStart(event,'${j.id}')" ontouchmove="bmapDraw(event,'${j.id}')" ontouchend="bmapEnd('${j.id}')"></canvas>
+        <!-- TAB: FORMS -->
+        <div class="crew-tab-panel" id="${tabId}-forms">
+          <div class="ci-section">
+            <div class="ci-section-title">BLUE LIGHT</div>
+            <div class="ci-row">
+              <span class="ci-label">RESPONDING</span>
+              <span style="display:flex;gap:8px">
+                <label class="radio-opt" style="font-size:12px"><input type="radio" name="${j.id}-blr" value="yes" ${j.blueLightResponding==='yes'?'checked':''} onchange="saveField('${j.id}','blueLightResponding','yes')"> Yes</label>
+                <label class="radio-opt" style="font-size:12px"><input type="radio" name="${j.id}-blr" value="no" ${j.blueLightResponding==='no'?'checked':''} onchange="saveField('${j.id}','blueLightResponding','no')"> No</label>
+              </span>
             </div>
-            <div>
-              <button onclick="bmapClear('${j.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px;display:block;margin-bottom:8px">CLEAR MAP</button>
-              <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">TAP OR CLICK TO MARK INJURIES</span>
+            <div class="ci-row">
+              <span class="ci-label">CONVEYING</span>
+              <span style="display:flex;gap:8px">
+                <label class="radio-opt" style="font-size:12px"><input type="radio" name="${j.id}-blc" value="yes" ${j.blueLightConveying==='yes'?'checked':''} onchange="saveField('${j.id}','blueLightConveying','yes')"> Yes</label>
+                <label class="radio-opt" style="font-size:12px"><input type="radio" name="${j.id}-blc" value="no" ${j.blueLightConveying==='no'?'checked':''} onchange="saveField('${j.id}','blueLightConveying','no')"> No</label>
+              </span>
+            </div>
+            <input class="fi" placeholder="Blue light detail if applicable..." style="font-size:12px;padding:8px 10px;margin-top:8px" value="${j.blueLightDetail||''}" onchange="saveField('${j.id}','blueLightDetail',this.value)">
+          </div>
+          <div class="ci-section">
+            <div class="ci-section-title">BODY CAMERA</div>
+            <div class="check-group">
+              <label class="check-opt"><input type="radio" name="${j.id}-bc" value="In Use" ${j.bodyCamera==='In Use'?'checked':''} onchange="saveField('${j.id}','bodyCamera','In Use')"> In Use</label>
+              <label class="check-opt"><input type="radio" name="${j.id}-bc" value="Not Available" ${j.bodyCamera==='Not Available'?'checked':''} onchange="saveField('${j.id}','bodyCamera','Not Available')"> Not Available</label>
+              <label class="check-opt"><input type="radio" name="${j.id}-bc" value="Not Required" ${j.bodyCamera==='Not Required'?'checked':''} onchange="saveField('${j.id}','bodyCamera','Not Required')"> Not Required</label>
             </div>
           </div>
+          <div class="ci-section">
+            <div class="ci-section-title">OBSERVATIONS LOG</div>
+            ${obsHtml}
+          </div>
         </div>
+
+        <!-- TAB: NOTES -->
+        <div class="crew-tab-panel" id="${tabId}-notes">
+          <div class="ci-section">
+            <div class="ci-section-title" style="color:var(--green)">LEAD ST SUMMARY</div>
+            <textarea class="fta" style="font-size:13px;min-height:100px" placeholder="Lead ST summary of the task..." onchange="saveField('${j.id}','leadStSummary',this.value)">${j.leadStSummary||''}</textarea>
+          </div>
+          <div class="ci-section">
+            <div class="ci-section-title">CREW NOTES</div>
+            <textarea class="fta" style="font-size:13px;min-height:80px" placeholder="Any notes from the crew..." onchange="saveField('${j.id}','crewNotes',this.value)">${j.crewNotes||''}</textarea>
+          </div>
+          <div class="ci-section">
+            <div class="ci-section-title">TIMELINE</div>
+            <div class="ci-row"><span class="ci-label">DISPATCHED</span><span class="ci-val" style="font-family:'Share Tech Mono',monospace">${j.dispatchedAt||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">EN ROUTE</span><span class="ci-val" style="font-family:'Share Tech Mono',monospace">${j.enrouteAt||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">ON SITE</span><span class="ci-val" style="font-family:'Share Tech Mono',monospace">${j.onsiteAt||'—'}</span></div>
+            <div class="ci-row"><span class="ci-label">COMPLETE</span><span class="ci-val" style="font-family:'Share Tech Mono',monospace">${j.completedAt||'—'}</span></div>
+          </div>
+        </div>
+
       </div>
-    </div>`;
+    </div>`
   }).join('');
   setTimeout(restoreSigs, 50);
 }
 
 // ---- CREW INTERACTIONS ----
 function toggleCard(id) { openCards[id] = !openCards[id]; renderCrewJobs(); }
+
+function crewTab(tabId, tab, btn) {
+  // Hide all panels for this card
+  document.querySelectorAll('[id^="' + tabId + '-"]').forEach(p => p.classList.remove('active'));
+  // Deactivate all tab buttons in this card
+  btn.closest('.crew-tabs').querySelectorAll('.crew-tab').forEach(b => b.classList.remove('active'));
+  // Show selected
+  const panel = document.getElementById(tabId + '-' + tab);
+  if (panel) panel.classList.add('active');
+  btn.classList.add('active');
+  // Restore sigs if switching to locations tab
+  if (tab === 'locations') setTimeout(restoreSigs, 50);
+}
 function toggleNHS(id) {
   const job = jobs.find(j=>j.id===id);
   const el = document.getElementById('nhs-'+id);
@@ -2952,6 +3107,7 @@ function openModal(id) {
       <div class="ib-row"><span class="ib-label">VRN</span><span class="ib-val">${j.vrn||'—'}</span></div>
     </div>
     ${j.leadStSummary?`<div class="ib" style="margin-top:12px;border-color:rgba(0,230,118,0.2)"><div class="ib-title" style="color:var(--green)">Lead ST Summary</div><div style="font-size:13px;line-height:1.6">${j.leadStSummary}</div></div>`:''}
+    ${j.ctrlNotes?`<div class="ib" style="margin-top:12px;border-color:rgba(251,146,60,0.3)"><div class="ib-title" style="color:#fb923c"> Controller Notes — Private</div><div style="font-size:13px;line-height:1.6;color:var(--text)">${j.ctrlNotes}</div></div>`:''}
     <div class="ib" style="margin-top:12px;border-color:rgba(245,197,24,0.3)">
       <div class="ib-title"> Point 1 Handover — Collecting From</div>
       <div class="ib-row"><span class="ib-label">Released By</span><span class="ib-val">${j.p1HandoverName||'—'}</span></div>
@@ -3496,11 +3652,13 @@ function showView(v) {
   document.getElementById('completed-view').style.display   = v==='completed'  ? 'block' : 'none';
   document.getElementById('invoice-view').style.display     = v==='invoice'    ? 'block' : 'none';
   document.getElementById('archive-view').style.display     = v==='archive'    ? 'block' : 'none';
+  document.getElementById('incidents-view').style.display   = v==='incidents'  ? 'block' : 'none';
   if (v==='home')       { renderHomeDashboard(); }
   if (v==='locations')  { renderLocationsView(); }
   if (v==='completed')  { renderCompleted(); }
   if (v==='invoice')    { renderInvoiceView(); }
   if (v==='archive')    { renderArchiveView(); }
+  if (v==='incidents')  { renderIncidentsView(); }
   if (v==='leads')      { renderLeadsView(); }
   if (v==='bookings')   { renderBookingsView(); }
 }
@@ -4535,7 +4693,7 @@ function renderCompleted() {
           <div style="color:var(--muted);font-size:9px;letter-spacing:1px;margin-bottom:2px">LEAD ST</div>
           <div>${j.crew||'—'}</div>
         </div>
-        <div><button class="view-btn" onclick="openModal('${j.id}')">VIEW</button></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><button class="view-btn" onclick="openModal('${j.id}')">VIEW</button><button class="view-btn" style="color:#a78bfa;border-color:rgba(167,139,250,0.4);font-size:9px" onclick="repeatBooking('${j.id}')">REPEAT</button></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">
         <div style="background:var(--surface2);padding:10px 18px">
@@ -4850,6 +5008,275 @@ function deleteLocation(key, idx) {
 // Keep openLocationsManager pointing to showView for any old references
 function openLocationsManager() { showView('locations'); }
 function addManualLocation() {}
+
+// ======== INCIDENT REPORTS ========
+function openIncidentModal() {
+  // Populate job dropdown with crew's current jobs
+  const sel = document.getElementById('inc-job-ref');
+  const myJobs = jobs.filter(j => j.crew === user || (j.additionalStaff||[]).includes(user));
+  sel.innerHTML = '<option value="">— Select Job —</option>' +
+    myJobs.map(j => `<option value="${j.id}">${j.id} — ${j.suName||'—'}</option>`).join('');
+  // Default date/time to now
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('inc-datetime').value = now.toISOString().slice(0,16);
+  // Clear fields
+  ['inc-location','inc-description','inc-actions','inc-witnesses'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('inc-type').value = '';
+  document.getElementById('incident-modal').style.display = 'flex';
+}
+
+function closeIncidentModal() {
+  document.getElementById('incident-modal').style.display = 'none';
+}
+
+function submitIncidentReport() {
+  const type = document.getElementById('inc-type').value;
+  const desc = document.getElementById('inc-description').value.trim();
+  if (!type || !desc) { showToast('TYPE AND DESCRIPTION ARE REQUIRED', 'warn'); return; }
+
+  const report = {
+    id: 'INC-' + Date.now(),
+    submittedBy: user,
+    submittedAt: new Date().toLocaleString('en-GB'),
+    jobRef: document.getElementById('inc-job-ref').value,
+    datetime: document.getElementById('inc-datetime').value,
+    location: document.getElementById('inc-location').value.trim(),
+    type,
+    severity: document.querySelector('input[name="inc-severity"]:checked')?.value || '—',
+    police: document.querySelector('input[name="inc-police"]:checked')?.value || 'No',
+    injury: document.querySelector('input[name="inc-injury"]:checked')?.value || 'No',
+    description: desc,
+    actions: document.getElementById('inc-actions').value.trim(),
+    witnesses: document.getElementById('inc-witnesses').value.trim(),
+    status: 'new',
+  };
+
+  db.ref('incidents/' + report.id).set(report).then(() => {
+    closeIncidentModal();
+    showToast('INCIDENT REPORT SUBMITTED — ' + report.id, 'success');
+  });
+}
+
+// ---- Incidents listener ----
+let incidents = [];
+db.ref('incidents').on('value', snap => {
+  incidents = snap.val() ? Object.values(snap.val()).filter(Boolean) : [];
+  // Badge count for controller
+  const newCount = incidents.filter(i => i.status === 'new').length;
+  const badge = document.getElementById('incidents-badge');
+  if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? 'inline-block' : 'none'; }
+  if (document.getElementById('incidents-view') && document.getElementById('incidents-view').style.display !== 'none') renderIncidentsView();
+});
+
+function renderIncidentsView() {
+  const list = document.getElementById('incidents-list');
+  if (!list) return;
+  const count = document.getElementById('incidents-count');
+  if (count) count.textContent = `// ${incidents.length} REPORT${incidents.length!==1?'S':''}`;
+  if (!incidents.length) {
+    list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO INCIDENT REPORTS ON FILE</div>`;
+    return;
+  }
+  const sorted = [...incidents].sort((a,b) => b.submittedAt > a.submittedAt ? 1 : -1);
+  const sevCol = { Low:'#00e676', Medium:'#f5c518', High:'#f97316', Critical:'#ef4444' };
+  list.innerHTML = sorted.map(inc => `
+    <div style="background:var(--surface);border:1px solid var(--border2);border-left:3px solid ${sevCol[inc.severity]||'#8a94b8'};padding:16px 18px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--text-bright)">${inc.type}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid ${sevCol[inc.severity]||'#8a94b8'};color:${sevCol[inc.severity]||'#8a94b8'}">${inc.severity||'—'}</div>
+            ${inc.status==='new'?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;background:rgba(239,68,68,0.2);color:var(--danger)">NEW</div>`:''}
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:4px">
+            ${inc.id} · ${inc.submittedBy?.toUpperCase()||'—'} · ${inc.submittedAt||'—'}
+            ${inc.jobRef?` · JOB: ${inc.jobRef}`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${inc.status==='new'?`<button onclick="markIncidentReviewed('${inc.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid rgba(0,230,118,0.3);color:var(--green);cursor:pointer;letter-spacing:1px">MARK REVIEWED</button>`:'<span style="font-family:\'Share Tech Mono\',monospace;font-size:10px;color:var(--green);padding:6px 0"> REVIEWED</span>'}
+        </div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#c8cde0;line-height:1.7;margin-bottom:8px">${inc.description}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-family:'Share Tech Mono',monospace;font-size:10px">
+        ${inc.location?`<div><span style="color:var(--muted)">LOCATION: </span>${inc.location}</div>`:''}
+        <div><span style="color:var(--muted)">POLICE: </span>${inc.police||'No'}</div>
+        <div><span style="color:var(--muted)">INJURY: </span>${inc.injury||'No'}</div>
+        ${inc.actions?`<div style="grid-column:span 3"><span style="color:var(--muted)">ACTIONS TAKEN: </span>${inc.actions}</div>`:''}
+        ${inc.witnesses?`<div style="grid-column:span 3"><span style="color:var(--muted)">WITNESSES: </span>${inc.witnesses}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function markIncidentReviewed(id) {
+  db.ref('incidents/' + id + '/status').set('reviewed');
+  showToast('MARKED AS REVIEWED', 'success');
+}
+
+// ======== REPEAT BOOKING ========
+function repeatBooking(id) {
+  const j = jobs.find(x => x.id === id);
+  if (!j) return;
+  showView('dispatch');
+  setTimeout(() => {
+    const set = (eid, val) => { const el = document.getElementById(eid); if(el && val) el.value = val; };
+    // Pre-fill all fields from existing job
+    set('fi-agency', j.agency); set('fi-poc', j.poc); set('fi-poc-pos', j.pocPos);
+    set('fi-tel', j.agencyTel); set('fi-payable', j.payableBy);
+    set('fi-from-hosp', j.fromHosp); set('fi-from-ward', j.fromWard);
+    set('fi-from-addr', j.fromAddr); set('fi-from-post', j.fromPost);
+    set('fi-from-poc', j.fromPoc); set('fi-from-poc-pos', j.fromPocPos); set('fi-from-tel', j.fromTel);
+    set('fi-to-hosp', j.toHosp); set('fi-to-ward', j.toWard);
+    set('fi-to-addr', j.toAddr); set('fi-to-post', j.toPost);
+    set('fi-to-poc', j.toPoc); set('fi-to-poc-pos', j.toPocPos); set('fi-to-tel', j.toTel);
+    set('fi-su-name', j.suName); set('fi-su-gender', j.suGender);
+    set('fi-su-nationality', j.suNationality); set('fi-su-dob', j.suDob);
+    set('fi-su-nhs', j.suNhs); set('fi-su-build', j.suBuild); set('fi-su-height', j.suHeight);
+    set('fi-su-gp', j.suGp); set('fi-sup-pass', j.supPass);
+    set('fi-reason', j.reason); set('fi-misc', j.misc);
+    // Task type
+    if (j.taskType) setTaskType(j.taskType);
+    // MHA + risks
+    if (j.isDetainedMHA) {
+      const el = document.querySelector(`#controller-view input[name="cr-mha"][value="${j.isDetainedMHA}"]`);
+      if(el) { el.checked = true; toggleMHAFields(); }
+    }
+    if (j.mhaSection) {
+      const sects = Array.isArray(j.mhaSection) ? j.mhaSection : [j.mhaSection];
+      sects.forEach(v => { const el = document.querySelector(`#section-tags input[name="cb-section"][value="${v}"]`); if(!el) addTag('section-picker','section-tags','cb-section'); });
+    }
+    if (j.risks) {
+      Object.entries(j.risks).forEach(([risk, val]) => {
+        const el = document.querySelector(`#controller-view input[name="cr-${risk}"][value="${val}"]`);
+        if(el) el.checked = true;
+      });
+      calcCrewScore();
+    }
+    // Clear the due date — new booking needs a new time
+    const dueEl = document.getElementById('fi-due'); if(dueEl) dueEl.value = '';
+    showToast('REPEAT BOOKING LOADED — SET DATE/TIME AND DISPATCH', 'success');
+  }, 150);
+}
+
+// ======== INVOICE PDF ========
+function generateInvoicePDF() {
+  const ready = jobs.filter(j => j.readyToInvoice && !j.invoiced);
+  if (!ready.length) { showToast('NO JOBS READY FOR INVOICING', 'warn'); return; }
+
+  const toMins = t => { if(!t) return 0; const parts = t.replace(/[^0-9:]/g,'').split(':').map(Number); return (parts[0]||0)*60+(parts[1]||0); };
+  let totalMins = 0;
+
+  const rows = ready.map((j,i) => {
+    const start = j.dispatchedAt || ''; const end = j.completedAt || '';
+    let diff = 0, durStr = '—';
+    if (start && end) {
+      diff = toMins(end) - toMins(start);
+      if (diff < 0) diff += 1440;
+      totalMins += diff;
+      durStr = (Math.floor(diff/60)>0?Math.floor(diff/60)+'h ':'')+(diff%60)+'m';
+    }
+    const dueFmt = j.due && !isNaN(new Date(j.due)) ? new Date(j.due).toLocaleDateString('en-GB') : j.due||'—';
+    return `<tr style="background:${i%2===0?'#f9fafb':'#fff'}">
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-family:monospace;font-size:11px">${j.id}</td>
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-size:12px;font-weight:600">${j.suName||'—'}</td>
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-size:11px">${dueFmt}</td>
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-size:11px">${j.fromHosp||'—'} → ${j.toHosp||'—'}</td>
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-size:11px">${j.crew||'—'}</td>
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-family:monospace;font-size:11px;text-align:center">${durStr}</td>
+      <td style="padding:8px 10px;border:1px solid #e5e7eb;font-family:monospace;font-size:11px">${j.invoice||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const totalStr = (Math.floor(totalMins/60)>0?Math.floor(totalMins/60)+'h ':'')+(totalMins%60)+'m';
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const invoiceNum = 'INV-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-4);
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice ${invoiceNum}</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:Arial,sans-serif; font-size:12px; color:#111; background:#fff; }
+    .page { max-width:210mm; margin:0 auto; padding:14mm; }
+    .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #1a1e2e; padding-bottom:16px; margin-bottom:20px; }
+    .co-name { font-size:26px; font-weight:900; letter-spacing:3px; color:#1a1e2e; }
+    .co-name span { color:#d97706; }
+    .co-sub { font-size:9px; color:#6b7280; letter-spacing:2px; margin-top:2px; }
+    .co-detail { font-size:10px; color:#6b7280; margin-top:8px; line-height:1.6; }
+    .inv-title { text-align:right; }
+    .inv-title h1 { font-size:28px; font-weight:900; color:#1a1e2e; letter-spacing:2px; }
+    .inv-num { font-size:13px; color:#d97706; font-weight:700; margin-top:4px; }
+    .inv-date { font-size:11px; color:#6b7280; margin-top:2px; }
+    .meta { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+    .meta-box { background:#f9fafb; border:1px solid #e5e7eb; padding:12px 14px; }
+    .meta-label { font-size:9px; color:#6b7280; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+    .meta-val { font-size:13px; font-weight:600; color:#111; }
+    table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+    th { background:#1a1e2e; color:#fff; padding:8px 10px; text-align:left; font-size:10px; letter-spacing:1px; }
+    .total-row { background:#1a1e2e; color:#fff; }
+    .total-row td { padding:10px 10px; font-weight:700; }
+    .footer { margin-top:20px; padding-top:12px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; font-size:9px; color:#9ca3af; }
+    @media print { body{-webkit-print-color-adjust:exact;print-color-adjust:exact} }
+  </style></head><body><div class="page">
+
+  <div class="header">
+    <div>
+      <div class="co-name">CITADEL<span>SECURE</span></div>
+      <div class="co-sub">SECURE PATIENT TRANSPORT</div>
+      <div class="co-detail">
+        Citadel Secure Ltd<br>
+        Tel: — &nbsp;|&nbsp; Email: —
+      </div>
+    </div>
+    <div class="inv-title">
+      <h1>INVOICE</h1>
+      <div class="inv-num">${invoiceNum}</div>
+      <div class="inv-date">Date: ${today}</div>
+    </div>
+  </div>
+
+  <div class="meta">
+    <div class="meta-box">
+      <div class="meta-label">Billed To</div>
+      <div class="meta-val">${ready[0]?.agency||'—'}</div>
+    </div>
+    <div class="meta-box">
+      <div class="meta-label">Summary</div>
+      <div class="meta-val">${ready.length} Job${ready.length!==1?'s':''} &nbsp;|&nbsp; Total: ${totalStr}</div>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <th>Job Ref</th><th>Service User</th><th>Date</th><th>Route</th><th>Lead ST</th><th>Duration</th><th>Invoice Ref</th>
+    </tr>
+    ${rows}
+    <tr class="total-row">
+      <td colspan="5" style="text-align:right;letter-spacing:1px">TOTAL BILLABLE TIME</td>
+      <td style="color:#f5c518;font-size:16px">${totalStr}</td>
+      <td></td>
+    </tr>
+  </table>
+
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;padding:14px;margin-bottom:16px;font-size:11px;line-height:1.7;color:#374151">
+    <strong>Payment Terms:</strong> 30 days from invoice date.<br>
+    <strong>Reference:</strong> Please quote invoice number ${invoiceNum} on all correspondence and payments.
+  </div>
+
+  <div class="footer">
+    <span>CITADEL SECURE — SECURE PATIENT TRANSPORT</span>
+    <span>${invoiceNum} | ${today}</span>
+    <span>CONFIDENTIAL</span>
+  </div>
+
+  </div><scr`+`ipt>window.onload=()=>window.print();</scr`+`ipt></body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Citadel-Secure-${invoiceNum}.html`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('INVOICE PDF GENERATED — ' + invoiceNum, 'success');
+}
 
 // ======== SECTION PAPERWORK ========
 
