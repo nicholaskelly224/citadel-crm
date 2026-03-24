@@ -5269,9 +5269,18 @@ function renderBookingStats() {
   const weekAgo = new Date(now - 7*86400000).toISOString().slice(0,10);
   const monthAgo = new Date(now - 30*86400000).toISOString().slice(0,10);
 
-  const toDate = b => b.submittedAt ? (b.submittedAt.split('/').length === 3
-    ? (() => { const parts = b.submittedAt.split(/[/ :]/); return new Date(parts[2],parts[1]-1,parts[0]).toISOString().slice(0,10); })()
-    : '') : '';
+  const toDate = b => {
+    if (!b.submittedAt) return '';
+    try {
+      // Handle "24/03/2026, 12:17" or "24/03/2026 12:17" format
+      const s = b.submittedAt.replace(' (manual)', '');
+      const match = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (match) return `${match[3]}-${match[2].padStart(2,'0')}-${match[1].padStart(2,'0')}`;
+      // Try ISO format fallback
+      const d = new Date(s);
+      return isNaN(d) ? '' : d.toISOString().slice(0,10);
+    } catch(e) { return ''; }
+  };
 
   const today  = bookings.filter(b => toDate(b) === todayStr).length;
   const week   = bookings.filter(b => toDate(b) >= weekAgo).length;
