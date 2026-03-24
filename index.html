@@ -1856,14 +1856,23 @@ let jobs = [];
 
 // ---- FIREBASE SYNC ----
 // First load — hide connecting screen, then start live listener
-// Dismiss splash on page load — Firebase reads now require auth so we can't pre-load
-setTimeout(dismissSplash, 1800);
+// Dismiss splash on page load — multiple fallbacks to ensure it always dismisses
+function dismissSplash() {
+  const splash = document.getElementById('loading-splash');
+  if (!splash) return;
+  splash.classList.add('fade-out');
+  setTimeout(() => { splash.style.display = 'none'; }, 700);
+}
 
-// Show login screen once splash is gone
-setTimeout(() => {
-  document.getElementById('fb-connecting').style.display = 'none';
-  document.getElementById('login-screen').style.display = '';
-}, 1800);
+function dismissSplashAndShowLogin() {
+  dismissSplash();
+  const fc = document.getElementById('fb-connecting');
+  const ls = document.getElementById('login-screen');
+  if (fc) fc.style.display = 'none';
+  if (ls) ls.style.display = '';
+}
+setTimeout(dismissSplashAndShowLogin, 1800);
+window.addEventListener('load', () => setTimeout(dismissSplashAndShowLogin, 500));
 
 const SEED_HOSPITALS = [
   'Pinetree Court Hospital','Cefn Coed Hospital','Bronllys Community Hospital',
@@ -2091,13 +2100,6 @@ function startClock() {
 }
 
 // ---- LOADING SPLASH ----
-function dismissSplash() {
-  const splash = document.getElementById('loading-splash');
-  if (!splash) return;
-  splash.classList.add('fade-out');
-  setTimeout(() => { splash.style.display = 'none'; }, 700);
-}
-
 // ---- ANIMATED COUNTER ----
 function animateCounter(el, target, duration) {
   const start = performance.now();
