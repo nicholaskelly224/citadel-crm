@@ -1690,29 +1690,79 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
   </div>
 
   <!-- ADD VEHICLE MODAL -->
-  <div id="add-vehicle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9970;align-items:center;justify-content:center;padding:16px">
-    <div style="background:#2c3145;border:1px solid rgba(167,139,250,0.3);max-width:420px;width:100%;padding:26px 28px">
+  <div id="add-vehicle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9970;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+    <div style="background:#2c3145;border:1px solid rgba(167,139,250,0.3);max-width:500px;width:100%;padding:26px 28px;margin:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#a78bfa;letter-spacing:2px"> ADD VEHICLE</div>
         <button onclick="document.getElementById('add-vehicle-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
-      <div class="f" style="margin-bottom:14px">
-        <div class="fl">Registration Number <span style="color:var(--danger)">*</span></div>
-        <input class="fi" id="av-reg" placeholder="e.g. CE21 XYZ" style="text-transform:uppercase">
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border2)">VEHICLE DETAILS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="f"><div class="fl">Registration <span style="color:var(--danger)">*</span></div><input class="fi" id="av-reg" placeholder="e.g. CE21 XYZ" style="text-transform:uppercase"></div>
+        <div class="f"><div class="fl">Vehicle Type <span style="color:var(--danger)">*</span></div><input class="fi" id="av-type" placeholder="e.g. Ford Transit"></div>
+        <div class="f"><div class="fl">Colour</div><input class="fi" id="av-colour" placeholder="e.g. White"></div>
+        <div class="f"><div class="fl">Notes</div><input class="fi" id="av-notes" placeholder="e.g. Wheelchair adapted"></div>
       </div>
-      <div class="f" style="margin-bottom:14px">
-        <div class="fl">Vehicle Type <span style="color:var(--danger)">*</span></div>
-        <input class="fi" id="av-type" placeholder="e.g. Ford Transit, VW Transporter">
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border2)">COMPLIANCE DATES</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="f"><div class="fl">MOT Expiry</div><input class="fi" id="av-mot" type="date"></div>
+        <div class="f"><div class="fl">Road Tax Expiry</div><input class="fi" id="av-tax" type="date"></div>
+        <div class="f"><div class="fl">Next 12-Week Safety Inspection</div><input class="fi" id="av-safety" type="date"></div>
+        <div class="f"><div class="fl">Next 12-Week Service</div><input class="fi" id="av-service" type="date"></div>
+        <div class="f"><div class="fl">Last Deep Clean</div><input class="fi" id="av-deepclean" type="date"></div>
+        <div class="f"><div class="fl">Next Deep Clean Due</div><input class="fi" id="av-deepclean-due" type="date"></div>
       </div>
-      <div class="f" style="margin-bottom:14px">
-        <div class="fl">Colour</div>
-        <input class="fi" id="av-colour" placeholder="e.g. White">
+
+      <button onclick="addVehicle()" style="width:100%;padding:13px;background:#a78bfa;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer">+ ADD VEHICLE</button>
+    </div>
+  </div>
+
+  <!-- VEHICLE DOCUMENTS MODAL -->
+  <div id="vehicle-docs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9975;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+    <div style="background:#2c3145;border:1px solid rgba(245,197,24,0.3);max-width:560px;width:100%;padding:26px 28px;margin:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f5c518;letter-spacing:2px"> VEHICLE DOCUMENTS</div>
+          <div id="vdocs-reg" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:2px"></div>
+        </div>
+        <button onclick="document.getElementById('vehicle-docs-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
       </div>
-      <div class="f" style="margin-bottom:20px">
-        <div class="fl">Notes</div>
-        <input class="fi" id="av-notes" placeholder="e.g. Wheelchair adapted, livery fitted">
+      <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">SAVE GOOGLE DRIVE LINKS TO MOT CERTS, SERVICE RECORDS, REPAIR INVOICES ETC. UPLOAD THE FILE TO GOOGLE DRIVE FIRST, THEN PASTE THE SHARE LINK HERE.</p>
+
+      <!-- Link input -->
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:20px;align-items:end">
+        <div class="f"><div class="fl">Document Name</div><input class="fi" id="vdocs-name-input" placeholder="e.g. MOT Certificate 2025"></div>
+        <div class="f"><div class="fl">Google Drive Link</div><input class="fi" id="vdocs-link-input" placeholder="https://drive.google.com/..."></div>
+        <button onclick="addVehicleDocLink()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:10px 14px;background:#f5c518;color:#1a1e2e;border:none;cursor:pointer;letter-spacing:1px;font-weight:700;white-space:nowrap">+ ADD</button>
       </div>
-      <button onclick="addVehicle()" style="width:100%;padding:13px;background:#a78bfa;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> ADD VEHICLE</button>
+
+      <!-- Documents list -->
+      <div id="vdocs-list"></div>
+    </div>
+  </div>
+
+  <!-- EDIT COMPLIANCE MODAL -->
+  <div id="edit-compliance-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9975;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+    <div style="background:#2c3145;border:1px solid rgba(167,139,250,0.3);max-width:480px;width:100%;padding:26px 28px;margin:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#a78bfa;letter-spacing:2px"> COMPLIANCE DATES</div>
+          <div id="ec-reg" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:2px"></div>
+        </div>
+        <button onclick="document.getElementById('edit-compliance-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+      </div>
+      <input type="hidden" id="ec-vehicle-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="f"><div class="fl">MOT Expiry</div><input class="fi" id="ec-mot" type="date"></div>
+        <div class="f"><div class="fl">Road Tax Expiry</div><input class="fi" id="ec-tax" type="date"></div>
+        <div class="f"><div class="fl">Next 12-Week Safety Inspection</div><input class="fi" id="ec-safety" type="date"></div>
+        <div class="f"><div class="fl">Next 12-Week Service</div><input class="fi" id="ec-service" type="date"></div>
+        <div class="f"><div class="fl">Last Deep Clean</div><input class="fi" id="ec-deepclean" type="date"></div>
+        <div class="f"><div class="fl">Next Deep Clean Due</div><input class="fi" id="ec-deepclean-due" type="date"></div>
+      </div>
+      <button onclick="saveComplianceDates()" style="width:100%;padding:13px;background:#a78bfa;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer">SAVE DATES</button>
     </div>
   </div>
 
@@ -6782,9 +6832,14 @@ function renderFleetView() {
         </div>` : ''}
 
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="showVehicleHistory('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">VIEW HISTORY</button>
-        <button onclick="deleteVehicle('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">REMOVE VEHICLE</button>
+        <button onclick="openEditCompliance('${v.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(167,139,250,0.4);color:#a78bfa;cursor:pointer;letter-spacing:1px">COMPLIANCE DATES</button>
+        <button onclick="openVehicleDocs('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px">DOCUMENTS</button>
+        <button onclick="showVehicleHistory('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">CHECK HISTORY</button>
+        <button onclick="deleteVehicle('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">REMOVE</button>
       </div>
+
+      <!-- Compliance dates strip -->
+      ${renderComplianceStrip(v)}
     </div>`;
   }).join('');
 }
@@ -6828,13 +6883,21 @@ function addVehicle() {
   const id = 'VEH-' + reg.replace(/\s/g,'');
   const vehicle = {
     id, reg, type,
-    colour: document.getElementById('av-colour').value.trim(),
-    notes: document.getElementById('av-notes').value.trim(),
-    addedAt: new Date().toLocaleString('en-GB'),
-    addedBy: user,
+    colour:        document.getElementById('av-colour').value.trim(),
+    notes:         document.getElementById('av-notes').value.trim(),
+    mot:           document.getElementById('av-mot').value,
+    tax:           document.getElementById('av-tax').value,
+    safety:        document.getElementById('av-safety').value,
+    service:       document.getElementById('av-service').value,
+    deepclean:     document.getElementById('av-deepclean').value,
+    deepcleanDue:  document.getElementById('av-deepclean-due').value,
+    addedAt:       new Date().toLocaleString('en-GB'),
+    addedBy:       user,
   };
   db.ref('fleet/vehicles/' + id).set(vehicle).then(() => {
     document.getElementById('add-vehicle-modal').style.display = 'none';
+    ['av-reg','av-type','av-colour','av-notes','av-mot','av-tax','av-safety','av-service','av-deepclean','av-deepclean-due']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     audit('VEHICLE ADDED', `${reg} (${type}) added to fleet`, '');
     showToast('VEHICLE ADDED — ' + reg, 'success');
   });
@@ -6848,6 +6911,142 @@ function deleteVehicle(id, reg) {
   });
 }
 
+function renderComplianceStrip(v) {
+  const today = new Date();
+  const items = [
+    { label: 'MOT', date: v.mot },
+    { label: 'TAX', date: v.tax },
+    { label: '12W SAFETY', date: v.safety },
+    { label: '12W SERVICE', date: v.service },
+    { label: 'DEEP CLEAN', date: v.deepcleanDue },
+  ];
+  if (items.every(i => !i.date)) return '';
+
+  const getCol = dateStr => {
+    if (!dateStr) return '#4a5270';
+    const d = new Date(dateStr);
+    const days = Math.ceil((d - today) / 86400000);
+    if (days < 0) return '#ef4444';    // overdue
+    if (days <= 14) return '#fb923c';  // due within 2 weeks
+    if (days <= 30) return '#f5c518';  // due within a month
+    return '#00e676';                  // ok
+  };
+
+  const getLabel = dateStr => {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    const days = Math.ceil((d - today) / 86400000);
+    if (days < 0) return 'OVERDUE';
+    if (days === 0) return 'TODAY';
+    if (days <= 30) return `${days}D`;
+    return d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'2-digit'});
+  };
+
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border2)">
+    ${items.map(i => {
+      const col = getCol(i.date);
+      return `<div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 10px;border:1px solid ${col}44;color:${col};letter-spacing:1px">
+        ${i.label}<br><span style="font-size:10px;font-weight:700">${getLabel(i.date)}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function openEditCompliance(vehicleId) {
+  const v = fleetVehicles[vehicleId];
+  if (!v) return;
+  document.getElementById('ec-vehicle-id').value = vehicleId;
+  document.getElementById('ec-reg').textContent = v.reg + ' — ' + v.type;
+  document.getElementById('ec-mot').value = v.mot || '';
+  document.getElementById('ec-tax').value = v.tax || '';
+  document.getElementById('ec-safety').value = v.safety || '';
+  document.getElementById('ec-service').value = v.service || '';
+  document.getElementById('ec-deepclean').value = v.deepclean || '';
+  document.getElementById('ec-deepclean-due').value = v.deepcleanDue || '';
+  document.getElementById('edit-compliance-modal').style.display = 'flex';
+}
+
+function saveComplianceDates() {
+  const id = document.getElementById('ec-vehicle-id').value;
+  const updates = {
+    mot:          document.getElementById('ec-mot').value,
+    tax:          document.getElementById('ec-tax').value,
+    safety:       document.getElementById('ec-safety').value,
+    service:      document.getElementById('ec-service').value,
+    deepclean:    document.getElementById('ec-deepclean').value,
+    deepcleanDue: document.getElementById('ec-deepclean-due').value,
+  };
+  db.ref('fleet/vehicles/' + id).update(updates).then(() => {
+    document.getElementById('edit-compliance-modal').style.display = 'none';
+    audit('COMPLIANCE UPDATED', `${fleetVehicles[id]?.reg} compliance dates updated`, '');
+    showToast('COMPLIANCE DATES SAVED', 'success');
+  });
+}
+
+// ---- VEHICLE DOCUMENTS (Google Drive links — no Storage needed) ----
+let _docsVehicleId = null;
+
+function openVehicleDocs(vehicleId, reg) {
+  _docsVehicleId = vehicleId;
+  document.getElementById('vdocs-reg').textContent = reg;
+  document.getElementById('vdocs-link-input').value = '';
+  document.getElementById('vdocs-name-input').value = '';
+  loadVehicleDocs(vehicleId);
+  document.getElementById('vehicle-docs-modal').style.display = 'flex';
+}
+
+function loadVehicleDocs(vehicleId) {
+  const list = document.getElementById('vdocs-list');
+  list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">LOADING...</div>`;
+  db.ref('fleet/documents/' + vehicleId).once('value', snap => {
+    const docs = snap.val() ? Object.values(snap.val()) : [];
+    if (!docs.length) {
+      list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);padding:12px 0">NO DOCUMENTS LINKED YET — ADD A GOOGLE DRIVE LINK ABOVE</div>`;
+      return;
+    }
+    list.innerHTML = docs.sort((a,b) => b.addedAt > a.addedAt ? 1 : -1).map(d => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);margin-bottom:6px;gap:10px">
+        <div style="min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px">Added by ${d.addedBy} — ${d.addedAt}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <a href="${d.url}" target="_blank" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 12px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;text-decoration:none;letter-spacing:1px">OPEN</a>
+          <button onclick="deleteVehicleDoc('${d.id}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:6px 10px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">REMOVE</button>
+        </div>
+      </div>`).join('');
+  });
+}
+
+function addVehicleDocLink() {
+  const url = document.getElementById('vdocs-link-input').value.trim();
+  const name = document.getElementById('vdocs-name-input').value.trim();
+  if (!url || !name) { showToast('ENTER BOTH A NAME AND A LINK', 'warn'); return; }
+  if (!url.startsWith('http')) { showToast('LINK MUST START WITH http:// or https://', 'warn'); return; }
+  const docId = 'DOC-' + Date.now();
+  const doc = { id: docId, name, url, addedBy: user, addedAt: new Date().toLocaleString('en-GB') };
+  db.ref('fleet/documents/' + _docsVehicleId + '/' + docId).set(doc).then(() => {
+    document.getElementById('vdocs-link-input').value = '';
+    document.getElementById('vdocs-name-input').value = '';
+    loadVehicleDocs(_docsVehicleId);
+    audit('DOCUMENT LINKED', `${name} linked to ${fleetVehicles[_docsVehicleId]?.reg}`, '');
+    showToast('DOCUMENT LINK SAVED', 'success');
+  });
+}
+
+function deleteVehicleDoc(docId) {
+  if (!confirm('Remove this document link?')) return;
+  db.ref('fleet/documents/' + _docsVehicleId + '/' + docId).remove().then(() => {
+    loadVehicleDocs(_docsVehicleId);
+    showToast('DOCUMENT REMOVED', 'warn');
+  });
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1024/1024).toFixed(1) + ' MB';
+}
 function resolveDefect(vehicleId, checkId) {
   db.ref('fleet/checks/' + checkId + '/resolved').set(true).then(() => {
     showToast('DEFECT MARKED RESOLVED', 'success');
