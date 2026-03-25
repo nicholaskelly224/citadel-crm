@@ -379,6 +379,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
         <div id="reports-menu" class="nav-drop-menu" style="display:none">
           <div onclick="showView('incidents');closeNavDrops()" class="nav-drop-item"> INCIDENTS</div>
           <div onclick="showView('leads');closeNavDrops()" class="nav-drop-item"> LEADS</div>
+          <div onclick="showView('clockinout');closeNavDrops()" class="nav-drop-item"> ATTENDANCE</div>
           <div onclick="showView('auditlog');closeNavDrops()" class="nav-drop-item"> AUDIT LOG</div>
         </div>
       </div>
@@ -1632,6 +1633,34 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     </div>
   </div>
 
+  <!-- CLOCK IN/OUT VIEW -->
+  <div id="clockinout-view" class="view-wrap" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px">
+      <div class="section-title" style="margin-bottom:0"> CREW ATTENDANCE</div>
+      <button onclick="exportAttendanceCSV()" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:9px 18px;background:none;border:1px solid rgba(0,230,118,0.4);color:var(--green);cursor:pointer;letter-spacing:1px"> EXPORT CSV</button>
+    </div>
+    <p style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:24px">LIVE VIEW OF WHO IS CURRENTLY CLOCKED IN. FULL SHIFT HISTORY BELOW.</p>
+
+    <!-- Live status tiles -->
+    <div id="clockin-live" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:30px"></div>
+
+    <!-- Date filter -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px">SHIFT HISTORY</div>
+      <input type="date" class="fi" id="att-date-from" style="max-width:160px;padding:7px 12px;font-size:12px">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">TO</div>
+      <input type="date" class="fi" id="att-date-to" style="max-width:160px;padding:7px 12px;font-size:12px">
+      <button onclick="renderAttendanceHistory()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 16px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">FILTER</button>
+      <button onclick="clearAttendanceFilter()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 16px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">ALL</button>
+    </div>
+
+    <!-- Header row -->
+    <div style="display:grid;grid-template-columns:160px 140px 100px 100px 100px 1fr;gap:10px;padding:8px 14px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;background:var(--surface2);border:1px solid var(--border2);margin-bottom:2px">
+      <div>DATE</div><div>CREW MEMBER</div><div>CLOCK IN</div><div>CLOCK OUT</div><div>HOURS</div><div>NOTES</div>
+    </div>
+    <div id="att-history-list"></div>
+  </div>
+
   <!-- FLEET VIEW -->
   <div id="fleet-view" class="view-wrap" style="display:none">
 
@@ -1715,16 +1744,23 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <div style="margin-bottom:20px">
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">DEFECTS / ISSUES (leave blank if none)</div>
         <textarea class="fi" id="fc-defects" rows="3" placeholder="Describe any defects found..." style="resize:vertical"></textarea>
-        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap" id="fc-severity-wrap" style="display:none">
-          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;width:100%;margin-bottom:4px">SEVERITY</div>
-          ${['Minor','Action Required','Do Not Use'].map(s=>`
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:11px;color:${s==='Do Not Use'?'#ef4444':s==='Action Required'?'#fb923c':'#8a94b8'}">
-              <input type="radio" name="fc-severity" value="${s}" ${s==='Minor'?'checked':''}> ${s.toUpperCase()}
-            </label>`).join('')}
+        <div style="margin-top:12px">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">DEFECT SEVERITY</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:11px;color:#8a94b8">
+              <input type="radio" name="fc-severity" value="Minor" checked> MINOR
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:11px;color:#fb923c">
+              <input type="radio" name="fc-severity" value="Action Required"> ACTION REQUIRED
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:11px;color:#ef4444">
+              <input type="radio" name="fc-severity" value="Do Not Use"> DO NOT USE
+            </label>
+          </div>
         </div>
       </div>
 
-      <button onclick="submitFleetCheck()" style="width:100%;padding:14px;background:#f5c518;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> SUBMIT CHECK & SIGN OFF</button>
+      <button onclick="submitFleetCheck()" style="width:100%;padding:14px;background:#f5c518;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer">SUBMIT CHECK & SIGN OFF</button>
     </div>
   </div>
 
@@ -1789,6 +1825,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
       <div class="section-title" style="margin-bottom:0">MY TASKS <span id="crew-name-tag"></span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openClockInOut()" id="btn-clock" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.5);color:#00e676;cursor:pointer;letter-spacing:1px;font-weight:700"> CLOCK IN</button>
         <button onclick="openChangePasswordModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px"> CHANGE PASSWORD</button>
         <button onclick="openFleetCheckModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(0,230,118,0.4);color:#00e676;cursor:pointer;letter-spacing:1px"> VEHICLE CHECK</button>
         <button onclick="openIncidentModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(239,68,68,0.5);color:var(--danger);cursor:pointer;letter-spacing:1px"> REPORT INCIDENT</button>
@@ -1886,6 +1923,27 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <button onclick="closeIncidentModal()" style="flex:1;padding:13px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer">CANCEL</button>
       <button onclick="submitIncidentReport()" style="flex:2;padding:13px;background:var(--danger);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> SUBMIT INCIDENT REPORT</button>
     </div>
+  </div>
+</div>
+
+<!-- CLOCK IN/OUT MODAL (crew) -->
+<div id="clockinout-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9970;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#2c3145;border:1px solid rgba(245,197,24,0.3);max-width:380px;width:100%;padding:30px 28px;text-align:center">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:8px">CITADEL SECURE</div>
+    <div id="cio-name" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--text-bright);margin-bottom:4px"></div>
+    <div id="cio-time" style="font-family:'Share Tech Mono',monospace;font-size:26px;color:#f5c518;margin-bottom:4px;letter-spacing:3px"></div>
+    <div id="cio-date" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:24px"></div>
+    <div id="cio-status" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px 16px;letter-spacing:2px;margin-bottom:6px;border-radius:2px"></div>
+    <div id="cio-since" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:20px"></div>
+    <div class="f" style="margin-bottom:20px;text-align:left">
+      <div class="fl">Notes (optional)</div>
+      <input class="fi" id="cio-notes" placeholder="e.g. Starting shift, covering for...">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button id="cio-in-btn" onclick="doClockIn()" style="flex:1;padding:14px;background:#00e676;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer">CLOCK IN</button>
+      <button id="cio-out-btn" onclick="doClockOut()" style="flex:1;padding:14px;background:#ef4444;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer">CLOCK OUT</button>
+    </div>
+    <button onclick="document.getElementById('clockinout-modal').style.display='none'" style="width:100%;margin-top:10px;padding:10px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">CLOSE</button>
   </div>
 </div>
 
@@ -2158,7 +2216,7 @@ function startFirebaseListeners() {
         if (badge) { badge.textContent = notifs.length; badge.style.display = notifs.length > 0 ? 'inline-block' : 'none'; }
         notifs.forEach(n => {
           if (Notification.permission === 'granted' && !n.shown) {
-            new Notification('Citadel Secure — New Job', { body: n.message, icon: '/citadel-crm/icon-192.png' });
+            new Notification('Citadel Secure — New Job', { body: n.message });
             db.ref('notifications/' + username + '/' + n.jobId + '/shown').set(true);
           }
         });
@@ -2298,6 +2356,8 @@ function loginSuccess() {
   // Start all Firebase listeners now that we're authenticated
   startFirebaseListeners();
   startFleetListeners();
+  startAttendanceListener();
+  if (role === 'controller') startAttendanceControllerListener();
   loadCrewPhones();
   audit('USER LOGIN', `${user} logged in as ${role}`, '');
   if (role === 'controller') {
@@ -4002,6 +4062,7 @@ function showView(v) {
   document.getElementById('locations-view').style.display   = v==='locations'  ? 'block' : 'none';
   document.getElementById('completed-view').style.display   = v==='completed'  ? 'block' : 'none';
   document.getElementById('invoice-view').style.display     = v==='invoice'    ? 'block' : 'none';
+  document.getElementById('clockinout-view').style.display  = v==='clockinout' ? 'block' : 'none';
   document.getElementById('fleet-view').style.display       = v==='fleet'      ? 'block' : 'none';
   document.getElementById('auditlog-view').style.display    = v==='auditlog'   ? 'block' : 'none';
   document.getElementById('archive-view').style.display     = v==='archive'    ? 'block' : 'none';
@@ -4014,6 +4075,7 @@ function showView(v) {
   if (v==='archive')    { renderArchiveView(); }
   if (v==='auditlog')   { renderAuditView(); }
   if (v==='fleet')      { renderFleetView(); }
+  if (v==='clockinout') { renderAttendanceView(); }
   if (v==='users')      { renderUsersView(); }
   if (v==='incidents')  { renderIncidentsView(); }
   if (v==='leads')      { renderLeadsView(); }
@@ -6367,10 +6429,239 @@ function renderBookingStats() {
     </div>`;
 }
 
+// ======== CLOCK IN / OUT ========
+let _clockTick = null;
+let _myClockStatus = null; // current crew member's clock status
+
+function startAttendanceListener() {
+  const username = auth.currentUser?.email?.split('@')[0];
+  if (!username) return;
+  // Listen to own clock status
+  db.ref('attendance/status/' + username).on('value', snap => {
+    _myClockStatus = snap.val();
+    updateClockBtn();
+  });
+}
+
+function startAttendanceControllerListener() {
+  db.ref('attendance/status').on('value', snap => {
+    if (document.getElementById('clockinout-view')?.style.display !== 'none') renderAttendanceLive();
+  });
+}
+
+function updateClockBtn() {
+  const btn = document.getElementById('btn-clock');
+  if (!btn) return;
+  if (_myClockStatus && _myClockStatus.status === 'in') {
+    btn.textContent = ' CLOCK OUT';
+    btn.style.background = 'rgba(239,68,68,0.15)';
+    btn.style.borderColor = 'rgba(239,68,68,0.5)';
+    btn.style.color = '#ef4444';
+  } else {
+    btn.textContent = ' CLOCK IN';
+    btn.style.background = 'rgba(0,230,118,0.15)';
+    btn.style.borderColor = 'rgba(0,230,118,0.5)';
+    btn.style.color = '#00e676';
+  }
+}
+
+function openClockInOut() {
+  const modal = document.getElementById('clockinout-modal');
+  document.getElementById('cio-name').textContent = user;
+  document.getElementById('cio-notes').value = '';
+
+  // Update live clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('cio-time').textContent = now.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    document.getElementById('cio-date').textContent = now.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  }
+  tick();
+  if (_clockTick) clearInterval(_clockTick);
+  _clockTick = setInterval(tick, 1000);
+
+  // Show current status
+  const statusEl = document.getElementById('cio-status');
+  const sinceEl = document.getElementById('cio-since');
+  const inBtn = document.getElementById('cio-in-btn');
+  const outBtn = document.getElementById('cio-out-btn');
+
+  if (_myClockStatus && _myClockStatus.status === 'in') {
+    statusEl.textContent = ' CURRENTLY CLOCKED IN';
+    statusEl.style.background = 'rgba(0,230,118,0.15)';
+    statusEl.style.color = '#00e676';
+    sinceEl.textContent = 'Since ' + (_myClockStatus.clockInTime || '—');
+    inBtn.disabled = true; inBtn.style.opacity = '0.3';
+    outBtn.disabled = false; outBtn.style.opacity = '1';
+  } else {
+    statusEl.textContent = ' NOT CLOCKED IN';
+    statusEl.style.background = 'rgba(239,68,68,0.1)';
+    statusEl.style.color = '#ef4444';
+    sinceEl.textContent = _myClockStatus?.clockOutTime ? 'Last clocked out: ' + _myClockStatus.clockOutTime : 'No record today';
+    inBtn.disabled = false; inBtn.style.opacity = '1';
+    outBtn.disabled = true; outBtn.style.opacity = '0.3';
+  }
+
+  modal.style.display = 'flex';
+}
+
+function doClockIn() {
+  const username = auth.currentUser?.email?.split('@')[0];
+  if (!username) return;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  const dateStr = now.toLocaleDateString('en-GB');
+  const notes = document.getElementById('cio-notes').value.trim();
+
+  const shiftId = 'SHF-' + Date.now();
+  const status = { status: 'in', clockInTime: timeStr, clockInDate: dateStr, displayName: user, shiftId };
+
+  db.ref('attendance/status/' + username).set(status);
+  db.ref('attendance/shifts/' + shiftId).set({
+    id: shiftId, username, displayName: user,
+    date: dateStr, clockIn: timeStr, clockOut: null,
+    notes, ts: now.getTime(),
+  });
+
+  document.getElementById('clockinout-modal').style.display = 'none';
+  audit('CLOCK IN', `${user} clocked in at ${timeStr}`, '');
+  showToast('CLOCKED IN — ' + timeStr, 'success');
+}
+
+function doClockOut() {
+  const username = auth.currentUser?.email?.split('@')[0];
+  if (!username || !_myClockStatus) return;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  const notes = document.getElementById('cio-notes').value.trim();
+  const shiftId = _myClockStatus.shiftId;
+
+  db.ref('attendance/status/' + username).update({ status: 'out', clockOutTime: timeStr });
+  if (shiftId) {
+    db.ref('attendance/shifts/' + shiftId).update({ clockOut: timeStr, notesOut: notes || null });
+  }
+
+  document.getElementById('clockinout-modal').style.display = 'none';
+  audit('CLOCK OUT', `${user} clocked out at ${timeStr}`, '');
+  showToast('CLOCKED OUT — ' + timeStr, 'warn');
+}
+
+// ---- CONTROLLER: render attendance views ----
+function renderAttendanceView() {
+  renderAttendanceLive();
+  renderAttendanceHistory();
+}
+
+function renderAttendanceLive() {
+  const el = document.getElementById('clockin-live');
+  if (!el) return;
+  db.ref('attendance/status').once('value', snap => {
+    const statuses = snap.val() || {};
+    const entries = Object.entries(statuses);
+    if (!entries.length) {
+      el.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO CREW HAVE CLOCKED IN YET TODAY</div>`;
+      return;
+    }
+    el.innerHTML = entries.map(([username, s]) => {
+      const isIn = s.status === 'in';
+      const col = isIn ? '#00e676' : '#ef4444';
+      const bg = isIn ? 'rgba(0,230,118,0.08)' : 'rgba(239,68,68,0.06)';
+      return `<div style="background:${bg};border:1px solid ${col}44;border-top:3px solid ${col};padding:16px 18px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--text-bright);margin-bottom:4px">${s.displayName||username}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:${col};letter-spacing:1px;margin-bottom:4px">${isIn?'CLOCKED IN':'CLOCKED OUT'}</div>
+        ${isIn?`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">In since: ${s.clockInTime||'—'}</div>`:`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">Out at: ${s.clockOutTime||'—'}</div>`}
+      </div>`;
+    }).join('');
+  });
+}
+
+function renderAttendanceHistory() {
+  const el = document.getElementById('att-history-list');
+  if (!el) return;
+  const fromVal = document.getElementById('att-date-from')?.value;
+  const toVal = document.getElementById('att-date-to')?.value;
+
+  db.ref('attendance/shifts').orderByChild('ts').limitToLast(200).once('value', snap => {
+    let shifts = snap.val() ? Object.values(snap.val()) : [];
+    shifts.sort((a,b) => (b.ts||0) - (a.ts||0));
+
+    // Date filter
+    if (fromVal) shifts = shifts.filter(s => {
+      const d = s.date.split('/').reverse().join('-');
+      return d >= fromVal;
+    });
+    if (toVal) shifts = shifts.filter(s => {
+      const d = s.date.split('/').reverse().join('-');
+      return d <= toVal;
+    });
+
+    if (!shifts.length) {
+      el.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO SHIFTS RECORDED FOR THIS PERIOD</div>`;
+      return;
+    }
+
+    el.innerHTML = shifts.map(s => {
+      // Calculate hours
+      let hours = '—';
+      if (s.clockIn && s.clockOut) {
+        const [inH, inM] = s.clockIn.split(':').map(Number);
+        const [outH, outM] = s.clockOut.split(':').map(Number);
+        const mins = (outH * 60 + outM) - (inH * 60 + inM);
+        if (mins > 0) hours = Math.floor(mins/60) + 'h ' + (mins%60) + 'm';
+      }
+      return `<div style="display:grid;grid-template-columns:160px 140px 100px 100px 100px 1fr;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border2);font-family:'Share Tech Mono',monospace;font-size:11px">
+        <div style="color:var(--muted)">${s.date||'—'}</div>
+        <div style="color:#f5c518;font-weight:700">${s.displayName||s.username||'—'}</div>
+        <div style="color:#00e676">${s.clockIn||'—'}</div>
+        <div style="color:${s.clockOut?'#ef4444':'#fb923c'}">${s.clockOut||'STILL IN'}</div>
+        <div style="color:var(--muted)">${hours}</div>
+        <div style="color:var(--muted);font-size:10px">${s.notes||s.notesOut||''}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function clearAttendanceFilter() {
+  const f = document.getElementById('att-date-from');
+  const t = document.getElementById('att-date-to');
+  if (f) f.value = '';
+  if (t) t.value = '';
+  renderAttendanceHistory();
+}
+
+function exportAttendanceCSV() {
+  db.ref('attendance/shifts').once('value', snap => {
+    const shifts = snap.val() ? Object.values(snap.val()).sort((a,b)=>(b.ts||0)-(a.ts||0)) : [];
+    if (!shifts.length) { showToast('NO ATTENDANCE DATA TO EXPORT', 'warn'); return; }
+    const cols = ['Date','Crew Member','Username','Clock In','Clock Out','Hours','Notes'];
+    const esc = v => { const s = String(v||''); return s.includes(',')||s.includes('"') ? '"'+s.replace(/"/g,'""')+'"' : s; };
+    const rows = shifts.map(s => {
+      let hours = '';
+      if (s.clockIn && s.clockOut) {
+        const [inH, inM] = s.clockIn.split(':').map(Number);
+        const [outH, outM] = s.clockOut.split(':').map(Number);
+        const mins = (outH*60+outM)-(inH*60+inM);
+        if (mins > 0) hours = Math.floor(mins/60) + 'h ' + (mins%60) + 'm';
+      }
+      return [s.date, s.displayName, s.username, s.clockIn, s.clockOut||'Still In', hours, (s.notes||'')+(s.notesOut?' / '+s.notesOut:'')].map(esc).join(',');
+    });
+    const csv = [cols.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CitadelSecure-Attendance-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    audit('ATTENDANCE EXPORTED', `${shifts.length} shifts exported to CSV`, '');
+    showToast('EXPORTED ' + shifts.length + ' SHIFTS', 'success');
+  });
+}
+
 // ======== FLEET MANAGEMENT ========
 
 const FLEET_CHECKS = [
-  { section: 'EXTERIOR', icon: '🚐', items: [
+  { section: 'EXTERIOR', items: [
     'Bodywork — no new damage',
     'All lights working (headlights, indicators, brake lights)',
     'Tyres — adequate tread, no visible damage',
@@ -6378,26 +6669,26 @@ const FLEET_CHECKS = [
     'Windscreen — no cracks or chips',
     'Wipers — working and not worn',
   ]},
-  { section: 'INTERIOR', icon: '🪑', items: [
+  { section: 'INTERIOR', items: [
     'Interior clean and tidy',
     'All seatbelts present and working',
     'Headrests in place',
     'No loose items that could become projectiles',
   ]},
-  { section: 'ENGINE', icon: '🔧', items: [
+  { section: 'ENGINE', items: [
     'Oil level — within range',
     'Coolant / water level — within range',
     'Fuel — sufficient for shift',
     'No warning lights on dashboard',
     'Brakes feel responsive',
   ]},
-  { section: 'SAFETY EQUIPMENT', icon: '🧯', items: [
+  { section: 'SAFETY EQUIPMENT', items: [
     'Fire extinguisher — present, seal intact, in date',
     'First aid kit — present, contents checked, not expired',
     'Defibrillator (AED) — present, pads in date, charged and ready',
     'PPE stocked — gloves, masks, aprons',
   ]},
-  { section: 'PATIENT TRANSPORT', icon: '🛏️', items: [
+  { section: 'PATIENT TRANSPORT', items: [
     'Stretcher / carry chair — clean, straps intact, mechanism works',
     'Restraints — present and undamaged',
     'Communication device — charged and working',
@@ -6472,8 +6763,8 @@ function renderFleetView() {
         </div>
         <div style="text-align:right">
           <div style="font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;color:${ragCol};letter-spacing:1px"> ${ragLabel}</div>
-          ${lastCheck?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px">Last checked: ${lastCheck.submittedAt} by ${lastCheck.submittedBy}</div>`:'<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;color:var(--muted);margin-top:3px">No checks recorded</div>'}
-          ${lastCheck?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">Mileage: ${lastCheck.mileage||'—'}</div>`:''}
+          ${lastCheck?`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#f5c518;margin-top:3px"> CHECKED BY: ${lastCheck.submittedBy}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px">${lastCheck.submittedAt} &nbsp;|&nbsp; Mileage: ${lastCheck.mileage||'—'}</div>`:'<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;color:var(--danger);margin-top:3px"> NO CHECK TODAY</div>'}
         </div>
       </div>
 
@@ -6582,7 +6873,7 @@ function showVehicleHistory(vehicleId, reg) {
       const col = c.severity === 'Do Not Use' ? '#ef4444' : c.severity === 'Action Required' ? '#fb923c' : c.defects ? '#fb923c' : '#00e676';
       return `<div style="display:grid;grid-template-columns:160px 120px 100px 1fr auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border2);font-family:'Share Tech Mono',monospace;font-size:11px">
         <div style="color:var(--muted)">${c.submittedAt}</div>
-        <div style="color:#a78bfa">${c.submittedBy}</div>
+        <div style="color:#f5c518;font-weight:700">${c.submittedBy}</div>
         <div style="color:var(--muted)">📍 ${c.mileage||'—'} mi</div>
         <div style="color:${col}">${c.defects||'ALL CLEAR'}</div>
         <div style="font-size:9px;color:${c.resolved?'#00e676':col};white-space:nowrap">${c.defects?(c.resolved?'RESOLVED':c.severity.toUpperCase()):''}</div>
@@ -6605,7 +6896,7 @@ function openFleetCheckModal() {
   const sections = document.getElementById('fc-sections');
   sections.innerHTML = FLEET_CHECKS.map(s => `
     <div style="margin-bottom:20px">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border2)">${s.icon} ${s.section}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border2)">${s.section}</div>
       ${s.items.map((item, i) => {
         const key = s.section.replace(/\s/g,'') + '_' + i;
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
