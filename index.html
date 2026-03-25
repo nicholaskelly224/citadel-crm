@@ -92,6 +92,10 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
 .topbar-right { display:flex; align-items:center; gap:14px; }
 .user-role-tag { font-family:'Share Tech Mono',monospace; font-size:10px; padding:3px 8px; border:1px solid #f5c518; color:#f5c518; letter-spacing:1px; }
 .logout-btn { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); background:none; border:1px solid var(--border2); padding:5px 12px; cursor:pointer; letter-spacing:1px; transition:all 0.2s; }
+.nav-drop-menu { position:absolute; top:calc(100% + 4px); left:0; background:#2c3145; border:1px solid var(--border2); min-width:160px; z-index:9000; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.nav-drop-item { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); padding:10px 16px; cursor:pointer; letter-spacing:1px; border-bottom:1px solid var(--border2); transition:all 0.15s; white-space:nowrap; }
+.nav-drop-item:last-child { border-bottom:none; }
+.nav-drop-item:hover { background:rgba(255,255,255,0.05); color:var(--text-bright); }
 .logout-btn:hover { color:var(--danger); border-color:var(--danger); }
 
 /* ---- CREW AVATARS ---- */
@@ -357,15 +361,46 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <span class="user-role-tag" id="rd"></span>
       <button class="logout-btn" onclick="showView('home')" id="btn-home" style="display:none;border-color:rgba(245,197,24,0.3);color:#f5c518"> HOME</button>
       <button class="logout-btn" onclick="showView('dispatch')" id="btn-dispatch" style="display:none;border-color:rgba(245,197,24,0.3);color:#f5c518"> DISPATCH</button>
-      <button class="logout-btn" onclick="showView('bookings')" id="btn-bookings" style="display:none;border-color:rgba(251,146,60,0.4);color:#fb923c"> BOOKINGS <span id="bookings-badge" style="display:none;background:#fb923c;color:#1a1e2e;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:4px;font-weight:700"></span></button>
-      <button class="logout-btn" onclick="showView('leads')" id="btn-leads" style="display:none;border-color:rgba(20,184,166,0.4);color:#2dd4bf"> LEADS</button>
-      <button class="logout-btn" onclick="showView('completed')" id="btn-completed" style="display:none;border-color:rgba(0,230,118,0.3);color:var(--green)"> COMPLETED JOBS</button>
-      <button class="logout-btn" onclick="showView('invoice')" id="btn-invoice" style="display:none;border-color:rgba(245,197,24,0.4);color:#f5c518"> INVOICING</button>
-      <button class="logout-btn" onclick="showView('incidents')" id="btn-incidents" style="display:none;border-color:rgba(239,68,68,0.4);color:var(--danger)"> INCIDENTS <span id="incidents-badge" style="display:none;background:var(--danger);color:#fff;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:4px;font-weight:700"></span></button>
-      <button class="logout-btn" onclick="showView('archive')" id="btn-archive" style="display:none;border-color:rgba(138,148,184,0.3);color:#8a94b8"> ARCHIVE</button>
-      <button class="logout-btn" onclick="showView('auditlog')" id="btn-auditlog" style="display:none;border-color:rgba(0,230,118,0.3);color:var(--green)"> AUDIT LOG</button>
-      <button class="logout-btn" onclick="showView('locations')" id="btn-locations" style="display:none;border-color:rgba(245,197,24,0.3);color:#f5c518"> MANAGE LOCATIONS</button>
-      <button class="logout-btn" onclick="showView('users')" id="btn-users" style="display:none;border-color:rgba(167,139,250,0.3);color:#a78bfa"> MANAGE USERS</button>
+
+      <!-- JOBS dropdown -->
+      <div class="nav-dropdown" id="nav-jobs" style="display:none;position:relative">
+        <button class="logout-btn" onclick="toggleNavDrop('jobs-menu')" style="border-color:rgba(0,230,118,0.3);color:var(--green)"> JOBS ▾</button>
+        <div id="jobs-menu" class="nav-drop-menu" style="display:none">
+          <div onclick="showView('bookings');closeNavDrops()" class="nav-drop-item"> BOOKINGS <span id="bookings-badge" style="display:none;background:#fb923c;color:#1a1e2e;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:4px;font-weight:700"></span></div>
+          <div onclick="showView('completed');closeNavDrops()" class="nav-drop-item"> COMPLETED</div>
+          <div onclick="showView('invoice');closeNavDrops()" class="nav-drop-item"> INVOICING</div>
+          <div onclick="showView('archive');closeNavDrops()" class="nav-drop-item"> ARCHIVE</div>
+        </div>
+      </div>
+
+      <!-- REPORTS dropdown -->
+      <div class="nav-dropdown" id="nav-reports" style="display:none;position:relative">
+        <button class="logout-btn" onclick="toggleNavDrop('reports-menu')" style="border-color:rgba(239,68,68,0.3);color:var(--danger)"> REPORTS ▾ <span id="incidents-badge" style="display:none;background:var(--danger);color:#fff;font-size:9px;padding:1px 6px;border-radius:2px;margin-left:2px;font-weight:700"></span></button>
+        <div id="reports-menu" class="nav-drop-menu" style="display:none">
+          <div onclick="showView('incidents');closeNavDrops()" class="nav-drop-item"> INCIDENTS</div>
+          <div onclick="showView('leads');closeNavDrops()" class="nav-drop-item"> LEADS</div>
+          <div onclick="showView('auditlog');closeNavDrops()" class="nav-drop-item"> AUDIT LOG</div>
+        </div>
+      </div>
+
+      <!-- MANAGE dropdown -->
+      <div class="nav-dropdown" id="nav-manage" style="display:none;position:relative">
+        <button class="logout-btn" onclick="toggleNavDrop('manage-menu')" style="border-color:rgba(167,139,250,0.3);color:#a78bfa"> MANAGE ▾</button>
+        <div id="manage-menu" class="nav-drop-menu" style="display:none">
+          <div onclick="showView('locations');closeNavDrops()" class="nav-drop-item"> LOCATIONS</div>
+          <div onclick="showView('users');closeNavDrops()" class="nav-drop-item"> USERS</div>
+        </div>
+      </div>
+
+      <!-- Hidden individual buttons kept for compatibility -->
+      <span id="btn-leads" style="display:none"></span>
+      <span id="btn-completed" style="display:none"></span>
+      <span id="btn-invoice" style="display:none"></span>
+      <span id="btn-incidents" style="display:none"></span>
+      <span id="btn-archive" style="display:none"></span>
+      <span id="btn-auditlog" style="display:none"></span>
+      <span id="btn-locations" style="display:none"></span>
+      <span id="btn-users" style="display:none"></span>
       <button class="logout-btn" onclick="doLogout()">LOGOUT</button>
     </div>
   </div>
@@ -1616,7 +1651,10 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
 
   <!-- ARCHIVE VIEW -->
   <div id="archive-view" class="view-wrap" style="display:none">
-    <div class="section-title">ARCHIVE <span id="archive-count"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:0">ARCHIVE <span id="archive-count"></span></div>
+      <button onclick="exportJobsCSV()" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:9px 18px;background:none;border:1px solid rgba(0,230,118,0.4);color:var(--green);cursor:pointer;letter-spacing:1px"> EXPORT CSV</button>
+    </div>
     <p style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">ALL INVOICED AND COMPLETED JOBS — RETAINED FOR COMPLIANCE AND FUTURE REFERENCE.</p>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
       <input id="archive-search" class="fi" style="max-width:280px;padding:9px 14px;font-size:13px" placeholder="Search by name, job ID, agency..." oninput="renderArchiveView()">
@@ -1625,7 +1663,10 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
   </div>
 
   <div id="completed-view" class="view-wrap" style="display:none">
-    <div class="section-title">COMPLETED JOBS <span id="completed-count"></span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:0">COMPLETED JOBS <span id="completed-count"></span></div>
+      <button onclick="exportJobsCSV('completed')" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:9px 18px;background:none;border:1px solid rgba(0,230,118,0.4);color:var(--green);cursor:pointer;letter-spacing:1px"> EXPORT CSV</button>
+    </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
       <input id="completed-search" class="fi" style="max-width:280px;padding:9px 14px;font-size:13px" placeholder="Search by name, CAD, job ID..." oninput="renderCompleted()">
       <select id="completed-sort" class="fi" style="max-width:180px;padding:9px 14px;font-size:13px" onchange="renderCompleted()">
@@ -1651,6 +1692,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
         <button onclick="openChangePasswordModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px"> CHANGE PASSWORD</button>
         <button onclick="openIncidentModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(239,68,68,0.5);color:var(--danger);cursor:pointer;letter-spacing:1px"> REPORT INCIDENT</button>
         <button onclick="openSectionGuide()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(167,139,250,0.5);color:#a78bfa;cursor:pointer;letter-spacing:1px"> SECTION GUIDE</button>
+        <button onclick="showCrewNotifications()" id="btn-crew-notif" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px;position:relative"> NOTIFICATIONS <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:8px;padding:1px 5px;border-radius:10px;font-weight:700"></span></button>
       </div>
     </div>
     <div id="crew-jobs-list"><div class="empty">NO JOBS ASSIGNED</div></div>
@@ -1743,6 +1785,17 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <button onclick="closeIncidentModal()" style="flex:1;padding:13px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer">CANCEL</button>
       <button onclick="submitIncidentReport()" style="flex:2;padding:13px;background:var(--danger);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> SUBMIT INCIDENT REPORT</button>
     </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS MODAL -->
+<div id="notif-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9965;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+  <div style="background:#2c3145;border:1px solid rgba(245,197,24,0.3);max-width:500px;width:100%;padding:26px 28px;margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f5c518;letter-spacing:2px"> NOTIFICATIONS</div>
+      <button onclick="document.getElementById('notif-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div id="notif-list"><div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted)">NO NOTIFICATIONS</div></div>
   </div>
 </div>
 
@@ -1973,8 +2026,27 @@ function startFirebaseListeners() {
     if (bookingsVisible) renderBookingsView();
   });
 
+  // Notification listener for crew
+  if (role === 'crew') {
+    const username = auth.currentUser?.email?.split('@')[0];
+    if (username) {
+      db.ref('notifications/' + username).on('value', snap => {
+        const val = snap.val();
+        const notifs = val ? Object.values(val).filter(n => !n.read) : [];
+        const badge = document.getElementById('notif-badge');
+        if (badge) { badge.textContent = notifs.length; badge.style.display = notifs.length > 0 ? 'inline-block' : 'none'; }
+        notifs.forEach(n => {
+          if (Notification.permission === 'granted' && !n.shown) {
+            new Notification('Citadel Secure — New Job', { body: n.message, icon: '/citadel-crm/icon-192.png' });
+            db.ref('notifications/' + username + '/' + n.jobId + '/shown').set(true);
+          }
+        });
+      });
+      setTimeout(() => { if (Notification.permission === 'default') Notification.requestPermission(); }, 2000);
+    }
+  }
+
   db.ref('incidents').on('value', snap => {
-    incidents = snap.val() ? Object.values(snap.val()).filter(Boolean) : [];
     const newCount = incidents.filter(i => i.status === 'new').length;
     const badge = document.getElementById('incidents-badge');
     if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? 'inline-block' : 'none'; }
@@ -2107,15 +2179,10 @@ function loginSuccess() {
   if (role === 'controller') {
     document.getElementById('btn-home').style.display = 'inline-block';
     document.getElementById('btn-dispatch').style.display = 'inline-block';
-    document.getElementById('btn-bookings').style.display = 'inline-block';
-    document.getElementById('btn-leads').style.display = 'inline-block';
-    document.getElementById('btn-locations').style.display = 'inline-block';
-    document.getElementById('btn-users').style.display = 'inline-block';
-    document.getElementById('btn-completed').style.display = 'inline-block';
-    document.getElementById('btn-invoice').style.display = 'inline-block';
-    document.getElementById('btn-incidents').style.display = 'inline-block';
-    document.getElementById('btn-archive').style.display = 'inline-block';
-    document.getElementById('btn-auditlog').style.display = 'inline-block';
+    document.getElementById('nav-jobs').style.display = 'inline-block';
+    document.getElementById('nav-reports').style.display = 'inline-block';
+    document.getElementById('nav-manage').style.display = 'inline-block';
+    document.getElementById('btn-bookings') && (document.getElementById('btn-bookings').style.display = 'none');
     showView('home');
     renderJobsTable(); updateStats(); refreshCAD();
   } else {
@@ -2641,6 +2708,7 @@ async function dispatchJob() {
   renderJobsTable();
   updateStats();
   audit('JOB DISPATCHED', `${j.suName||suName} → ${job.crew}`, jobId);
+  notifyCrewInApp(crew, jobId, job.suName, job.fromHosp, job.toHosp, job.due);
   showToast('S24 JOB '+jobId+' DISPATCHED → '+crew.toUpperCase(), 'success');
 }
 
@@ -2692,10 +2760,15 @@ function renderJobsTable() {
 function renderCrewJobs() {
   const el = document.getElementById('crew-jobs-list');
   if (!el) return;
+  const today = new Date().toISOString().slice(0,10);
   const myJobs = jobs.filter(j => (j.crew === user || (j.additionalStaff && j.additionalStaff.includes(user))) && j.status !== 'complete');
   if (!myJobs.length) { el.innerHTML='<div class="empty">NO JOBS ASSIGNED TO ' + user.toUpperCase() + '</div>'; return; }
+
+  // Split into today/active and upcoming
+  const activeJobs = myJobs.filter(j => !j.due || j.due.slice(0,10) <= today || j.status === 'enroute' || j.status === 'onsite');
+  const upcomingJobs = myJobs.filter(j => j.due && j.due.slice(0,10) > today && j.status === 'dispatched');
   const order = ['dispatched','enroute','onsite','complete'];
-  el.innerHTML = myJobs.map(j => {
+  el.innerHTML = activeJobs.map(j => {
     const ci = order.indexOf(j.status);
     const steps = [
       {label:'DISPATCHED',time:j.dispatchedAt},
@@ -3039,6 +3112,37 @@ function renderCrewJobs() {
       </div>
     </div>`
   }).join('');
+
+  // Add locked upcoming cards
+  if (upcomingJobs.length) {
+    const upcomingHtml = `
+      <div style="margin-top:24px;margin-bottom:10px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;padding:0 4px"> UPCOMING TASKS — LOCKED UNTIL DATE</div>
+      </div>
+      ${upcomingJobs.map(j => {
+        const dueFmt = j.due && !isNaN(new Date(j.due))
+          ? new Date(j.due).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}) + ' at ' + new Date(j.due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+          : j.due||'—';
+        return `<div style="background:var(--surface);border:1px solid var(--border2);border-left:4px solid #4a5270;margin-bottom:10px;padding:16px 18px;opacity:0.7;position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;right:0;bottom:0;left:0;background:repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(255,255,255,0.02) 10px,rgba(255,255,255,0.02) 20px);pointer-events:none"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--text-bright)">${j.suName||'—'}</div>
+                <span class="type-badge ${j.taskType==='bedwatch'?'tb-bedwatch':'tb-transport'}">${(j.taskType||'').toUpperCase()}</span>
+              </div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted)">${j.fromHosp||'—'} → ${j.toHosp||'—'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#f5c518;margin-bottom:4px"> ${dueFmt}</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:3px 10px;background:rgba(74,82,112,0.3);color:#8a94b8;display:inline-block"> LOCKED</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}`;
+    el.innerHTML += upcomingHtml;
+  }
+
   setTimeout(restoreSigs, 50);
 }
 
@@ -3086,8 +3190,21 @@ function addObs(id) {
   const j = jobs.find(j=>j.id===id); if(!j) return;
   if (!j.observations) j.observations=[];
   const now = new Date().toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit'});
-  j.observations.push({time:now,st:'',notes:''});
-  openCards[id]=true; renderCrewJobs();
+  j.observations.push({time:now, st:'', notes:''});
+  saveJobs();
+  // Update obs table in place — don't re-render entire card
+  const idx = j.observations.length - 1;
+  const table = document.getElementById('obs-' + id);
+  if (table) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input value="${now}" onchange="saveObs('${id}',${idx},'time',this.value)"></td>
+      <td><input value="" onchange="saveObs('${id}',${idx},'st',this.value)"></td>
+      <td><input value="" onchange="saveObs('${id}',${idx},'notes',this.value)"></td>`;
+    table.appendChild(tr);
+    // Focus the notes field
+    tr.querySelector('td:last-child input')?.focus();
+  }
 }
 function saveObs(id, idx, field, val) { const j=jobs.find(j=>j.id===id); if(j&&j.observations[idx]) j.observations[idx][field]=val; }
 
@@ -4964,7 +5081,7 @@ function renderInvoiceView() {
         </div>
         <div style="display:flex;flex-direction:column;gap:5px">
           <button class="view-btn" onclick="openModal('${j.id}')">VIEW</button>
-          <button class="view-btn" style="color:#00e676;border-color:rgba(0,230,118,0.3);font-size:9px" onclick="markInvoiced('${j.id}')">INVOICED ✓</button>
+          <button class="view-btn" style="color:#00e676;border-color:rgba(0,230,118,0.3);font-size:9px;white-space:nowrap" onclick="markInvoiced('${j.id}')">COMPLETE & ARCHIVE</button>
           <button class="view-btn" style="color:var(--danger);border-color:rgba(255,59,59,0.3)" onclick="deleteJob('${j.id}')">DELETE</button>
         </div>
       </div>
@@ -5176,8 +5293,55 @@ function submitChangePassword() {
   });
 }
 
+function showCrewNotifications() {
+  const username = auth.currentUser?.email?.split('@')[0];
+  if (!username) return;
+  db.ref('notifications/' + username).once('value', snap => {
+    const val = snap.val();
+    const notifs = val ? Object.values(val).sort((a,b) => b.timestamp > a.timestamp ? 1 : -1) : [];
+    const list = document.getElementById('notif-list');
+    if (!notifs.length) {
+      list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:10px 0">NO NOTIFICATIONS</div>`;
+    } else {
+      list.innerHTML = notifs.map(n => `
+        <div style="padding:14px 16px;border:1px solid ${n.read?'var(--border2)':'rgba(245,197,24,0.3)'};margin-bottom:8px;background:${n.read?'var(--surface)':'rgba(245,197,24,0.05)'}">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            ${!n.read?'<span style="width:8px;height:8px;border-radius:50%;background:#f5c518;flex-shrink:0;display:inline-block"></span>':''}
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">${n.timestamp}</div>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:4px">${n.suName||'New Job'}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted)">${n.fromHosp||'—'} → ${n.toHosp||'—'}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:#f5c518;margin-top:4px">${n.due||''}</div>
+        </div>`).join('');
+      // Mark all as read
+      notifs.forEach(n => { if (!n.read) db.ref('notifications/' + username + '/' + n.jobId + '/read').set(true); });
+      const badge = document.getElementById('notif-badge');
+      if (badge) badge.style.display = 'none';
+    }
+    document.getElementById('notif-modal').style.display = 'flex';
+  });
+}
+
 function openLocationsManager() { showView('locations'); }
 function addManualLocation() {}
+
+// ---- NAV DROPDOWNS ----
+function toggleNavDrop(id) {
+  const menu = document.getElementById(id);
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  closeNavDrops();
+  if (!isOpen) menu.style.display = 'block';
+}
+function closeNavDrops() {
+  ['jobs-menu','reports-menu','manage-menu'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.nav-dropdown')) closeNavDrops();
+});
 
 // ======== INCIDENT REPORTS ========
 function openIncidentModal() {
@@ -5989,41 +6153,168 @@ function renderBookingStats() {
   const weekAgo = new Date(now - 7*86400000).toISOString().slice(0,10);
   const monthAgo = new Date(now - 30*86400000).toISOString().slice(0,10);
 
-  const toDate = b => {
-    if (!b.submittedAt) return '';
+  // Parse any date string to YYYY-MM-DD
+  const toDate = dateStr => {
+    if (!dateStr) return '';
     try {
-      // Handle "24/03/2026, 12:17" or "24/03/2026 12:17" format
-      const s = b.submittedAt.replace(' (manual)', '');
-      const match = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if (match) return `${match[3]}-${match[2].padStart(2,'0')}-${match[1].padStart(2,'0')}`;
-      // Try ISO format fallback
-      const d = new Date(s);
+      // DD/MM/YYYY format (en-GB locale)
+      const m = String(dateStr).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+      // ISO or other parseable
+      const d = new Date(dateStr);
       return isNaN(d) ? '' : d.toISOString().slice(0,10);
     } catch(e) { return ''; }
   };
 
-  const today  = bookings.filter(b => toDate(b) === todayStr).length;
-  const week   = bookings.filter(b => toDate(b) >= weekAgo).length;
-  const month  = bookings.filter(b => toDate(b) >= monthAgo).length;
-  const total  = bookings.length;
+  // Count bookings by submittedAt
+  const bToday = bookings.filter(b => toDate(b.submittedAt) === todayStr).length;
+  const bWeek  = bookings.filter(b => { const d = toDate(b.submittedAt); return d >= weekAgo && d <= todayStr; }).length;
+  const bMonth = bookings.filter(b => { const d = toDate(b.submittedAt); return d >= monthAgo && d <= todayStr; }).length;
+  const bTotal = bookings.length;
+
+  // Count dispatched jobs by dispatchedAt
+  const jToday = jobs.filter(j => toDate(j.dispatchedAt) === todayStr).length;
+  const jWeek  = jobs.filter(j => { const d = toDate(j.dispatchedAt); return d >= weekAgo && d <= todayStr; }).length;
+  const jMonth = jobs.filter(j => { const d = toDate(j.dispatchedAt); return d >= monthAgo && d <= todayStr; }).length;
+  const jTotal = jobs.length;
 
   return `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+    <div style="margin-bottom:8px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px">BOOKINGS RECEIVED</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
       ${[
-        {label:'TODAY',   val:today,  col:'#f5c518'},
-        {label:'7 DAYS',  val:week,   col:'#a78bfa'},
-        {label:'30 DAYS', val:month,  col:'#fb923c'},
-        {label:'ALL TIME',val:total,  col:'#8a94b8'},
+        {label:'TODAY',   val:bToday,  col:'#f5c518'},
+        {label:'7 DAYS',  val:bWeek,   col:'#a78bfa'},
+        {label:'30 DAYS', val:bMonth,  col:'#fb923c'},
+        {label:'ALL TIME',val:bTotal,  col:'#8a94b8'},
       ].map(s=>`
         <div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid ${s.col};padding:14px 16px;text-align:center">
           <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">${s.label}</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;color:${s.col};line-height:1">${s.val}</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px">BOOKING${s.val!==1?'S':''}</div>
+        </div>`).join('')}
+    </div>
+    <div style="margin-bottom:8px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px">JOBS DISPATCHED</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+      ${[
+        {label:'TODAY',   val:jToday,  col:'#f5c518'},
+        {label:'7 DAYS',  val:jWeek,   col:'#a78bfa'},
+        {label:'30 DAYS', val:jMonth,  col:'#fb923c'},
+        {label:'ALL TIME',val:jTotal,  col:'#8a94b8'},
+      ].map(s=>`
+        <div style="background:var(--surface);border:1px solid var(--border2);border-top:2px solid ${s.col};padding:14px 16px;text-align:center">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">${s.label}</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;color:${s.col};line-height:1">${s.val}</div>
         </div>`).join('')}
     </div>`;
 }
 
-// ======== USER MANAGEMENT ========
+// ======== CSV EXPORT ========
+function exportJobsCSV(mode) {
+  // mode = 'completed' exports completed only, otherwise exports all archived
+  let data = mode === 'completed'
+    ? jobs.filter(j => j.status === 'complete')
+    : jobs.filter(j => j.archived || j.invoiced || j.status === 'complete');
+
+  if (!data.length) { showToast('NO DATA TO EXPORT', 'warn'); return; }
+
+  const cols = [
+    'Job ID','CAD Ref','Date Due','Dispatched At','Completed At',
+    'Status','Task Type','Service User','DOB','Gender','NHS No',
+    'Collecting From','From Ward','From Postcode',
+    'Conveying To','To Ward','To Postcode',
+    'Agency','POC','Agency Tel',
+    'Lead ST','Additional Staff',
+    'MHA Detained','Section','Diagnosis',
+    'Arrived P1','Departed P1','Arrived P2','Departed P2',
+    'P1 Handover Name','P1 Signed','P2 Handover Name','P2 Signed',
+    'Searching','Body Camera','Restrictive Measures',
+    'Notes','Invoiced','Invoiced At',
+  ];
+
+  const esc = v => {
+    if (v === null || v === undefined) return '';
+    const s = Array.isArray(v) ? v.join('; ') : String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? '"' + s.replace(/"/g,'""') + '"'
+      : s;
+  };
+
+  const rows = data.map(j => [
+    j.id, j.cad, j.due, j.dispatchedAt, j.completedAt,
+    j.status, j.taskType, j.suName, j.suDob, j.suGender, j.suNhs,
+    j.fromHosp, j.fromWard, j.fromPost,
+    j.toHosp, j.toWard, j.toPost,
+    j.agency, j.poc, j.agencyTel,
+    j.crew, (j.additionalStaff||[]).join('; '),
+    j.isDetainedMHA, (j.mhaSection||[]).join('; '), (j.diagnosis||[]).join('; '),
+    j.fromArrive, j.fromDepart, j.toArrive, j.toDepart,
+    j.p1HandoverName, j.p1HandoverSigned?'YES':'NO',
+    j.p2HandoverName, j.p2HandoverSigned?'YES':'NO',
+    j.searching, j.bodyCamera, (j.restrictiveMeasures||[]).join('; '),
+    j.misc, j.invoiced?'YES':'NO', j.invoicedAt,
+  ].map(esc).join(','));
+
+  const csv = [cols.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `CitadelSecure-Jobs-${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  audit('DATA EXPORTED', `${data.length} jobs exported to CSV by ${user}`, '');
+  showToast(`EXPORTED ${data.length} JOBS`, 'success');
+}
+
+// ======== PUSH NOTIFICATIONS ========
+const VAPID_PUBLIC_KEY = ''; // Set this after generating VAPID keys
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return false;
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+async function subscribeCrewToPush() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (!reg.pushManager) { showToast('PUSH NOT SUPPORTED ON THIS DEVICE', 'warn'); return; }
+
+    const granted = await requestNotificationPermission();
+    if (!granted) { showToast('NOTIFICATION PERMISSION DENIED', 'warn'); return; }
+
+    // Store subscription in Firebase under users/username/pushSub
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: VAPID_PUBLIC_KEY || null,
+    });
+    const username = auth.currentUser?.email?.split('@')[0];
+    if (username) {
+      await db.ref('users/' + username + '/pushSub').set(JSON.stringify(sub));
+      showToast('NOTIFICATIONS ENABLED', 'success');
+      audit('NOTIFICATIONS ENABLED', `${user} subscribed to push notifications`, '');
+    }
+  } catch(e) {
+    // Fall back to in-app notifications only
+    console.log('Push subscription failed:', e);
+  }
+}
+
+// Simple in-app notification when job dispatched (works without VAPID)
+function notifyCrewInApp(crewName, jobId, suName, fromHosp, toHosp, due) {
+  // Store a notification in Firebase — crew will see it next time they open the app
+  const username = Object.entries(window._userProfiles||{}).find(([k,v]) => v.displayName === crewName)?.[0];
+  if (!username) return;
+  const dueFmt = due && !isNaN(new Date(due))
+    ? new Date(due).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}) + ' ' + new Date(due).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+    : due||'—';
+  db.ref('notifications/' + username + '/' + jobId).set({
+    jobId, suName, fromHosp, toHosp, due: dueFmt,
+    message: `NEW JOB: ${suName} — ${fromHosp} → ${toHosp} on ${dueFmt}`,
+    timestamp: new Date().toLocaleString('en-GB'),
+    read: false,
+  });
+}
 function renderUsersView() {
   const list = document.getElementById('users-list');
   if (!list) return;
