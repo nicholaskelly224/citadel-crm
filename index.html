@@ -1617,6 +1617,9 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
         <div class="f"><div class="fl">Username <span style="color:var(--danger)">*</span></div><input class="fi" id="nu-username" placeholder="e.g. sarah" style="text-transform:lowercase"></div>
         <div class="f"><div class="fl">Display Name <span style="color:var(--danger)">*</span></div><input class="fi" id="nu-display" placeholder="e.g. Sarah Jones"></div>
         <div class="f"><div class="fl">Password <span style="color:var(--danger)">*</span></div><input class="fi" id="nu-password" placeholder="Set a password"></div>
+        <div class="f"><div class="fl">Mobile Number</div><input class="fi" id="nu-phone" placeholder="e.g. 07700 900000"></div>
+      </div>
+      <div class="fg fg-2" style="margin-bottom:14px">
         <div class="f"><div class="fl">Role <span style="color:var(--danger)">*</span></div>
           <select class="fs" id="nu-role">
             <option value="crew">Crew (ST)</option>
@@ -2047,6 +2050,7 @@ function startFirebaseListeners() {
   }
 
   db.ref('incidents').on('value', snap => {
+    incidents = snap.val() ? Object.values(snap.val()).filter(Boolean) : [];
     const newCount = incidents.filter(i => i.status === 'new').length;
     const badge = document.getElementById('incidents-badge');
     if (badge) { badge.textContent = newCount; badge.style.display = newCount > 0 ? 'inline-block' : 'none'; }
@@ -2175,6 +2179,7 @@ function loginSuccess() {
 
   // Start all Firebase listeners now that we're authenticated
   startFirebaseListeners();
+  loadCrewPhones();
   audit('USER LOGIN', `${user} logged in as ${role}`, '');
   if (role === 'controller') {
     document.getElementById('btn-home').style.display = 'inline-block';
@@ -2748,7 +2753,10 @@ function renderJobsTable() {
       <div class="jc"><span class="type-badge ${tbadge[j.taskType]||'tb-other'}">${j.taskType.toUpperCase()}</span></div>
       <div class="jc">${j.suName}</div>
       <div class="jc" style="font-size:11px;color:var(--muted)">${route}</div>
-      <div class="jc" style="font-size:12px">${j.crew}${j.additionalStaff&&j.additionalStaff.length?`<span style="color:var(--muted);font-size:10px"> +${j.additionalStaff.length}</span>`:''}</div>
+      <div class="jc" style="font-size:12px">
+        ${j.crew}${j.additionalStaff&&j.additionalStaff.length?`<span style="color:var(--muted);font-size:10px"> +${j.additionalStaff.length}</span>`:''}
+        ${(()=>{ const p=getCrewPhone(j.crew); return p?`<a href="tel:${p}" style="display:block;font-family:'Share Tech Mono',monospace;font-size:9px;color:#fb923c;margin-top:3px;text-decoration:none"> ${p}</a>`:''; })()}
+      </div>
       <div class="jc" style="font-family:'Share Tech Mono',monospace;font-size:11px">${turnupFmt}</div>
       <div class="jc"><span class="status-pill sp-${j.status}">${slabels[j.status]}</span></div>
       <div class="jc" style="display:flex;flex-direction:column;gap:4px"><button class="view-btn" onclick="openModal('${j.id}')">VIEW</button><button class="view-btn" style="color:#a78bfa;border-color:rgba(167,139,250,0.4);font-size:9px" onclick="repeatBooking('${j.id}')">REPEAT</button></div>
@@ -3271,7 +3279,7 @@ function openModal(id) {
     <div class="ib-grid">
       <div class="ib"><div class="ib-title">Task</div>
         <div class="ib-row"><span class="ib-label">Type</span><span class="ib-val"><span class="type-badge ${tbadge[j.taskType]}">${j.taskType.toUpperCase()}</span></span></div>
-        <div class="ib-row"><span class="ib-label">Lead ST</span><span class="ib-val">${j.crew}</span></div>
+        <div class="ib-row"><span class="ib-label">Lead ST</span><span class="ib-val">${j.crew}${(()=>{ const p=getCrewPhone(j.crew); return p?` <a href="tel:${p}" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#fb923c;text-decoration:none;margin-left:8px"> ${p}</a>`:''; })()}</span></div>
         ${j.additionalStaff&&j.additionalStaff.length?`<div class="ib-row"><span class="ib-label">Add. Staff</span><span class="ib-val" style="font-size:11px">${j.additionalStaff.join(', ')}</span></div>`:''}
         <div class="ib-row"><span class="ib-label">Turn Up</span><span class="ib-val" style="font-family:'Share Tech Mono',monospace;font-size:11px">${j.turnup?new Date(j.turnup).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}):'—'}</span></div>
         <div class="ib-row"><span class="ib-label">Due</span><span class="ib-val" style="font-family:'Share Tech Mono',monospace;font-size:11px">${j.due?new Date(j.due).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}):'—'}</span></div>
@@ -3368,7 +3376,11 @@ function globalSearch(q) {
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text-bright)">${j.suName||'—'}</div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:1px">${j.fromHosp||'—'} → ${j.toHosp||'—'}</div>
       </div>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:right">${j.crew||'—'}<br>${j.due?new Date(j.due).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):''}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);text-align:right">
+        ${j.crew||'—'}
+        ${(()=>{ const p=getCrewPhone(j.crew); return p?`<br><a href="tel:${p}" style="color:#fb923c;text-decoration:none"> ${p}</a>`:''; })()}
+        <br>${j.due?new Date(j.due).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):''}
+      </div>
     </div>`).join('');
   el.style.display = 'block';
 }
@@ -5322,7 +5334,34 @@ function showCrewNotifications() {
   });
 }
 
-function openLocationsManager() { showView('locations'); }
+function saveUserPhone(username) {
+  const phone = document.getElementById('phone-' + username)?.value?.trim();
+  db.ref('users/' + username + '/phone').set(phone).then(() => {
+    // Update local cache
+    if (window._crewPhones) window._crewPhones[username] = phone;
+    showToast('NUMBER SAVED', 'success');
+    renderUsersView();
+  });
+}
+
+// Load crew phone numbers into lookup — called after login
+function loadCrewPhones() {
+  db.ref('users').once('value', snap => {
+    const users = snap.val() || {};
+    window._crewPhones = {};
+    window._userProfiles = users;
+    Object.entries(users).forEach(([k, v]) => {
+      if (v.phone) window._crewPhones[v.displayName] = v.phone;
+    });
+  });
+}
+
+// Get phone for a display name
+function getCrewPhone(displayName) {
+  if (!displayName) return '';
+  const phones = window._crewPhones || {};
+  return phones[displayName] || '';
+}
 function addManualLocation() {}
 
 // ---- NAV DROPDOWNS ----
@@ -6330,7 +6369,14 @@ function renderUsersView() {
           <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid ${roleCol[u.role]||'#8a94b8'};color:${roleCol[u.role]||'#8a94b8'}">${(u.role||'crew').toUpperCase()}</div>
           ${isMe?'<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 8px;background:rgba(245,197,24,0.15);color:#f5c518"> YOU</div>':''}
         </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px">USERNAME: ${username} &nbsp;|&nbsp; ${username}@citadelsecure.app</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px">
+          USERNAME: ${username} &nbsp;|&nbsp; ${username}@citadelsecure.app
+          ${u.phone ? `&nbsp;|&nbsp; <a href="tel:${u.phone}" style="color:#fb923c;text-decoration:none"> ${u.phone}</a>` : ''}
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <input class="fi" id="phone-${username}" placeholder="Mobile number" style="max-width:180px;font-size:12px;padding:7px 10px" value="${u.phone||''}">
+          <button onclick="saveUserPhone('${username}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 12px;background:none;border:1px solid rgba(251,146,60,0.4);color:#fb923c;cursor:pointer;letter-spacing:1px;white-space:nowrap">SAVE NUMBER</button>
+        </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
           <input class="fi" id="pw-${username}" type="password" placeholder="${isMe?'Enter new password (min 6 chars)':'Set new password for this user'}" style="max-width:240px;font-size:12px;padding:7px 10px">
           <button onclick="changePassword('${username}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:${isMe?'rgba(245,197,24,0.15)':'none'};border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px;white-space:nowrap">${isMe?'CHANGE MY PASSWORD':'RESET PASSWORD'}</button>
@@ -6406,10 +6452,10 @@ function addUser() {
   auth.createUserWithEmailAndPassword(email, password)
     .then(() => {
       // Save profile to database
-      return db.ref('users/' + username).set({ displayName, role, email, createdAt: new Date().toLocaleString('en-GB') });
+      return db.ref('users/' + username).set({ displayName, role, email, phone: document.getElementById('nu-phone')?.value?.trim()||'', createdAt: new Date().toLocaleString('en-GB') });
     })
     .then(() => {
-      ['nu-username','nu-display','nu-password'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+      ['nu-username','nu-display','nu-password','nu-phone'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
       if (btn) { btn.disabled = false; btn.textContent = '+ ADD USER'; }
       renderUsersView();
       showToast('USER CREATED — ' + displayName.toUpperCase(), 'success');
