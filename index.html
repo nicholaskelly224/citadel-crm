@@ -1939,6 +1939,26 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
+// Keep user logged in — session persists across browser restarts
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// Auto-restore session if already logged in
+auth.onAuthStateChanged(fbUser => {
+  if (fbUser && !user) {
+    // Already authenticated — restore session
+    const username = fbUser.email?.split('@')[0];
+    if (username) {
+      db.ref('users/' + username).once('value', snap => {
+        const profile = snap.val();
+        if (profile) {
+          role = profile.role;
+          user = profile.displayName || username;
+          loginSuccess();
+        }
+      });
+    }
+  }
+});
 </script>
 
 <script>
@@ -5069,7 +5089,7 @@ function renderInvoiceView() {
 
     return `
     <div class="jobs-panel" style="margin-bottom:10px;border-left:4px solid #f5c518">
-      <div style="display:grid;grid-template-columns:120px 150px 1fr 120px 110px 120px 80px;padding:13px 18px;align-items:center;gap:8px">
+      <div style="display:grid;grid-template-columns:120px 150px 1fr 120px 110px 120px 110px;padding:13px 18px;align-items:center;gap:8px">
         <div>
           <div class="job-id">${j.id}</div>
           <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">CAD: ${j.cad||'—'}</div>
@@ -5093,7 +5113,7 @@ function renderInvoiceView() {
         </div>
         <div style="display:flex;flex-direction:column;gap:5px">
           <button class="view-btn" onclick="openModal('${j.id}')">VIEW</button>
-          <button class="view-btn" style="color:#00e676;border-color:rgba(0,230,118,0.3);font-size:9px;white-space:nowrap" onclick="markInvoiced('${j.id}')">COMPLETE & ARCHIVE</button>
+          <button class="view-btn" style="color:#00e676;border-color:rgba(0,230,118,0.3);font-size:9px;white-space:nowrap;padding:4px 6px" onclick="markInvoiced('${j.id}')">COMPLETE & ARCHIVE</button>
           <button class="view-btn" style="color:var(--danger);border-color:rgba(255,59,59,0.3)" onclick="deleteJob('${j.id}')">DELETE</button>
         </div>
       </div>
