@@ -389,6 +389,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
         <div id="manage-menu" class="nav-drop-menu" style="display:none">
           <div onclick="showView('locations');closeNavDrops()" class="nav-drop-item"> LOCATIONS</div>
           <div onclick="showView('users');closeNavDrops()" class="nav-drop-item"> USERS</div>
+          <div onclick="showView('fleet');closeNavDrops()" class="nav-drop-item"> FLEET</div>
         </div>
       </div>
 
@@ -1631,6 +1632,102 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     </div>
   </div>
 
+  <!-- FLEET VIEW -->
+  <div id="fleet-view" class="view-wrap" style="display:none">
+
+    <!-- Controller fleet dashboard -->
+    <div id="fleet-controller-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px">
+        <div class="section-title" style="margin-bottom:0"> FLEET MANAGEMENT</div>
+        <button onclick="openAddVehicleModal()" style="font-family:'Share Tech Mono',monospace;font-size:11px;padding:9px 18px;background:none;border:1px solid rgba(167,139,250,0.4);color:#a78bfa;cursor:pointer;letter-spacing:1px">+ ADD VEHICLE</button>
+      </div>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:24px">LIVE VEHICLE STATUS — CHECKS SUBMITTED BY CREW APPEAR HERE IN REAL TIME.</p>
+
+      <!-- RAG summary tiles -->
+      <div id="fleet-rag" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px"></div>
+
+      <!-- Vehicle cards -->
+      <div id="fleet-cards"></div>
+
+      <!-- Full check history table -->
+      <div id="fleet-history-wrap" style="display:none;margin-top:30px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px" id="fleet-history-title">CHECK HISTORY</div>
+          <button onclick="document.getElementById('fleet-history-wrap').style.display='none'" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">CLOSE</button>
+        </div>
+        <div id="fleet-history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD VEHICLE MODAL -->
+  <div id="add-vehicle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9970;align-items:center;justify-content:center;padding:16px">
+    <div style="background:#2c3145;border:1px solid rgba(167,139,250,0.3);max-width:420px;width:100%;padding:26px 28px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#a78bfa;letter-spacing:2px"> ADD VEHICLE</div>
+        <button onclick="document.getElementById('add-vehicle-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+      </div>
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Registration Number <span style="color:var(--danger)">*</span></div>
+        <input class="fi" id="av-reg" placeholder="e.g. CE21 XYZ" style="text-transform:uppercase">
+      </div>
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Vehicle Type <span style="color:var(--danger)">*</span></div>
+        <input class="fi" id="av-type" placeholder="e.g. Ford Transit, VW Transporter">
+      </div>
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Colour</div>
+        <input class="fi" id="av-colour" placeholder="e.g. White">
+      </div>
+      <div class="f" style="margin-bottom:20px">
+        <div class="fl">Notes</div>
+        <input class="fi" id="av-notes" placeholder="e.g. Wheelchair adapted, livery fitted">
+      </div>
+      <button onclick="addVehicle()" style="width:100%;padding:13px;background:#a78bfa;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> ADD VEHICLE</button>
+    </div>
+  </div>
+
+  <!-- FLEET CHECK MODAL (crew) -->
+  <div id="fleet-check-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9970;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto">
+    <div style="background:#2c3145;border:1px solid rgba(245,197,24,0.3);max-width:500px;width:100%;padding:26px 28px;margin:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:#f5c518;letter-spacing:2px"> VEHICLE CHECK</div>
+        <button onclick="document.getElementById('fleet-check-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+      </div>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:20px">COMPLETE BEFORE EVERY SHIFT. ALL ITEMS MUST BE CHECKED.</p>
+
+      <!-- Vehicle selector -->
+      <div class="f" style="margin-bottom:20px">
+        <div class="fl">Vehicle <span style="color:var(--danger)">*</span></div>
+        <select class="fs" id="fc-vehicle"></select>
+      </div>
+
+      <!-- Check sections -->
+      <div id="fc-sections"></div>
+
+      <!-- Mileage -->
+      <div class="f" style="margin-bottom:14px">
+        <div class="fl">Current Mileage <span style="color:var(--danger)">*</span></div>
+        <input class="fi" id="fc-mileage" type="number" placeholder="Enter current mileage reading">
+      </div>
+
+      <!-- Defects -->
+      <div style="margin-bottom:20px">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">DEFECTS / ISSUES (leave blank if none)</div>
+        <textarea class="fi" id="fc-defects" rows="3" placeholder="Describe any defects found..." style="resize:vertical"></textarea>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap" id="fc-severity-wrap" style="display:none">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;width:100%;margin-bottom:4px">SEVERITY</div>
+          ${['Minor','Action Required','Do Not Use'].map(s=>`
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:11px;color:${s==='Do Not Use'?'#ef4444':s==='Action Required'?'#fb923c':'#8a94b8'}">
+              <input type="radio" name="fc-severity" value="${s}" ${s==='Minor'?'checked':''}> ${s.toUpperCase()}
+            </label>`).join('')}
+        </div>
+      </div>
+
+      <button onclick="submitFleetCheck()" style="width:100%;padding:14px;background:#f5c518;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> SUBMIT CHECK & SIGN OFF</button>
+    </div>
+  </div>
+
   <!-- AUDIT LOG VIEW -->
   <div id="auditlog-view" class="view-wrap" style="display:none">
     <div class="section-title">AUDIT LOG <span id="audit-count"></span></div>
@@ -1693,6 +1790,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <div class="section-title" style="margin-bottom:0">MY TASKS <span id="crew-name-tag"></span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="openChangePasswordModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px"> CHANGE PASSWORD</button>
+        <button onclick="openFleetCheckModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(0,230,118,0.4);color:#00e676;cursor:pointer;letter-spacing:1px"> VEHICLE CHECK</button>
         <button onclick="openIncidentModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(239,68,68,0.5);color:var(--danger);cursor:pointer;letter-spacing:1px"> REPORT INCIDENT</button>
         <button onclick="openSectionGuide()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(167,139,250,0.5);color:#a78bfa;cursor:pointer;letter-spacing:1px"> SECTION GUIDE</button>
         <button onclick="showCrewNotifications()" id="btn-crew-notif" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px;position:relative"> NOTIFICATIONS <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:8px;padding:1px 5px;border-radius:10px;font-weight:700"></span></button>
@@ -2199,6 +2297,7 @@ function loginSuccess() {
 
   // Start all Firebase listeners now that we're authenticated
   startFirebaseListeners();
+  startFleetListeners();
   loadCrewPhones();
   audit('USER LOGIN', `${user} logged in as ${role}`, '');
   if (role === 'controller') {
@@ -3903,6 +4002,7 @@ function showView(v) {
   document.getElementById('locations-view').style.display   = v==='locations'  ? 'block' : 'none';
   document.getElementById('completed-view').style.display   = v==='completed'  ? 'block' : 'none';
   document.getElementById('invoice-view').style.display     = v==='invoice'    ? 'block' : 'none';
+  document.getElementById('fleet-view').style.display       = v==='fleet'      ? 'block' : 'none';
   document.getElementById('auditlog-view').style.display    = v==='auditlog'   ? 'block' : 'none';
   document.getElementById('archive-view').style.display     = v==='archive'    ? 'block' : 'none';
   document.getElementById('users-view').style.display      = v==='users'      ? 'block' : 'none';
@@ -3913,6 +4013,7 @@ function showView(v) {
   if (v==='invoice')    { renderInvoiceView(); }
   if (v==='archive')    { renderArchiveView(); }
   if (v==='auditlog')   { renderAuditView(); }
+  if (v==='fleet')      { renderFleetView(); }
   if (v==='users')      { renderUsersView(); }
   if (v==='incidents')  { renderIncidentsView(); }
   if (v==='leads')      { renderLeadsView(); }
@@ -6264,6 +6365,322 @@ function renderBookingStats() {
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:700;color:${s.col};line-height:1">${s.val}</div>
         </div>`).join('')}
     </div>`;
+}
+
+// ======== FLEET MANAGEMENT ========
+
+const FLEET_CHECKS = [
+  { section: 'EXTERIOR', icon: '🚐', items: [
+    'Bodywork — no new damage',
+    'All lights working (headlights, indicators, brake lights)',
+    'Tyres — adequate tread, no visible damage',
+    'Mirrors — intact and adjusted',
+    'Windscreen — no cracks or chips',
+    'Wipers — working and not worn',
+  ]},
+  { section: 'INTERIOR', icon: '🪑', items: [
+    'Interior clean and tidy',
+    'All seatbelts present and working',
+    'Headrests in place',
+    'No loose items that could become projectiles',
+  ]},
+  { section: 'ENGINE', icon: '🔧', items: [
+    'Oil level — within range',
+    'Coolant / water level — within range',
+    'Fuel — sufficient for shift',
+    'No warning lights on dashboard',
+    'Brakes feel responsive',
+  ]},
+  { section: 'SAFETY EQUIPMENT', icon: '🧯', items: [
+    'Fire extinguisher — present, seal intact, in date',
+    'First aid kit — present, contents checked, not expired',
+    'Defibrillator (AED) — present, pads in date, charged and ready',
+    'PPE stocked — gloves, masks, aprons',
+  ]},
+  { section: 'PATIENT TRANSPORT', icon: '🛏️', items: [
+    'Stretcher / carry chair — clean, straps intact, mechanism works',
+    'Restraints — present and undamaged',
+    'Communication device — charged and working',
+  ]},
+];
+
+let fleetVehicles = {};
+let fleetChecks = {};
+
+function startFleetListeners() {
+  db.ref('fleet/vehicles').on('value', snap => {
+    fleetVehicles = snap.val() || {};
+    if (document.getElementById('fleet-view')?.style.display !== 'none') renderFleetView();
+  });
+  db.ref('fleet/checks').on('value', snap => {
+    fleetChecks = snap.val() || {};
+    if (document.getElementById('fleet-view')?.style.display !== 'none') renderFleetView();
+  });
+}
+
+// ---- CONTROLLER: render fleet view ----
+function renderFleetView() {
+  const cards = document.getElementById('fleet-cards');
+  const rag = document.getElementById('fleet-rag');
+  if (!cards || !rag) return;
+
+  const vehicles = Object.values(fleetVehicles);
+  if (!vehicles.length) {
+    rag.innerHTML = '';
+    cards.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:30px 0;text-align:center;border:1px dashed var(--border2)"> NO VEHICLES ADDED YET — CLICK + ADD VEHICLE TO GET STARTED</div>`;
+    return;
+  }
+
+  // Build RAG summary
+  let green = 0, amber = 0, red = 0;
+  vehicles.forEach(v => {
+    const s = getVehicleRAG(v.id);
+    if (s === 'green') green++;
+    else if (s === 'amber') amber++;
+    else if (s === 'red') red++;
+    else green++; // no check yet — treat as unknown but don't alarm
+  });
+
+  rag.innerHTML = [
+    { label: 'ALL CLEAR', val: green, col: '#00e676', bg: 'rgba(0,230,118,0.08)' },
+    { label: 'DEFECT NOTED', val: amber, col: '#fb923c', bg: 'rgba(251,146,60,0.08)' },
+    { label: 'GROUNDED', val: red, col: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+  ].map(s => `
+    <div style="background:${s.bg};border:1px solid ${s.col}33;border-top:3px solid ${s.col};padding:16px;text-align:center">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">${s.label}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;color:${s.col};line-height:1">${s.val}</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px">VEHICLE${s.val!==1?'S':''}</div>
+    </div>`).join('');
+
+  // Build vehicle cards
+  cards.innerHTML = vehicles.map(v => {
+    const rag = getVehicleRAG(v.id);
+    const ragCol = { green: '#00e676', amber: '#fb923c', red: '#ef4444', none: '#4a5270' }[rag];
+    const ragLabel = { green: 'ALL CLEAR', amber: 'DEFECT NOTED', red: 'GROUNDED — DO NOT USE', none: 'NO CHECK TODAY' }[rag];
+    const lastCheck = getLastCheck(v.id);
+    const defects = getOpenDefects(v.id);
+
+    return `<div style="background:var(--surface);border:1px solid var(--border2);border-left:4px solid ${ragCol};padding:18px 20px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--text-bright);letter-spacing:1px">${v.reg}</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);padding:2px 8px;border:1px solid var(--border2)">${v.type||'—'}</div>
+            ${v.colour?`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">${v.colour}</div>`:''}
+          </div>
+          ${v.notes?`<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted)">${v.notes}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;color:${ragCol};letter-spacing:1px"> ${ragLabel}</div>
+          ${lastCheck?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px">Last checked: ${lastCheck.submittedAt} by ${lastCheck.submittedBy}</div>`:'<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;color:var(--muted);margin-top:3px">No checks recorded</div>'}
+          ${lastCheck?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">Mileage: ${lastCheck.mileage||'—'}</div>`:''}
+        </div>
+      </div>
+
+      ${defects.length ? `
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);padding:10px 14px;margin-bottom:12px">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#ef4444;letter-spacing:2px;margin-bottom:6px"> OPEN DEFECTS</div>
+          ${defects.map(d => `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+              <div>
+                <span style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;background:${d.severity==='Do Not Use'?'#ef4444':d.severity==='Action Required'?'rgba(251,146,60,0.3)':'rgba(138,148,184,0.2)'};color:${d.severity==='Do Not Use'?'#fff':d.severity==='Action Required'?'#fb923c':'#8a94b8'};margin-right:8px">${d.severity.toUpperCase()}</span>
+                <span style="font-size:12px;color:var(--text-bright)">${d.defects}</span>
+              </div>
+              <button onclick="resolveDefect('${v.id}','${d.checkId}')" style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 10px;background:none;border:1px solid rgba(0,230,118,0.4);color:#00e676;cursor:pointer;white-space:nowrap;letter-spacing:1px">RESOLVED</button>
+            </div>`).join('')}
+        </div>` : ''}
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="showVehicleHistory('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;letter-spacing:1px">VIEW HISTORY</button>
+        <button onclick="deleteVehicle('${v.id}','${v.reg}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">REMOVE VEHICLE</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getVehicleRAG(vehicleId) {
+  const todayStr = new Date().toISOString().slice(0,10);
+  const checks = Object.values(fleetChecks).filter(c => c.vehicleId === vehicleId);
+  const todayChecks = checks.filter(c => (c.submittedAt||'').includes(new Date().toLocaleDateString('en-GB').slice(0,2)));
+  // Simpler: check if any check today by timestamp
+  const today = checks.filter(c => c.ts && new Date(c.ts).toISOString().slice(0,10) === todayStr);
+  if (!today.length) return 'none';
+  const latest = today.sort((a,b) => b.ts - a.ts)[0];
+  if (!latest.defects) return 'green';
+  if (latest.severity === 'Do Not Use') return 'red';
+  if (latest.severity === 'Action Required') return 'amber';
+  return 'amber'; // minor defect
+}
+
+function getLastCheck(vehicleId) {
+  const checks = Object.values(fleetChecks).filter(c => c.vehicleId === vehicleId);
+  if (!checks.length) return null;
+  return checks.sort((a,b) => (b.ts||0) - (a.ts||0))[0];
+}
+
+function getOpenDefects(vehicleId) {
+  return Object.values(fleetChecks).filter(c =>
+    c.vehicleId === vehicleId && c.defects && !c.resolved
+  );
+}
+
+// ---- ADD VEHICLE ----
+function openAddVehicleModal() {
+  ['av-reg','av-type','av-colour','av-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('add-vehicle-modal').style.display = 'flex';
+}
+
+function addVehicle() {
+  const reg = document.getElementById('av-reg').value.trim().toUpperCase();
+  const type = document.getElementById('av-type').value.trim();
+  if (!reg || !type) { showToast('REGISTRATION AND TYPE ARE REQUIRED', 'warn'); return; }
+  const id = 'VEH-' + reg.replace(/\s/g,'');
+  const vehicle = {
+    id, reg, type,
+    colour: document.getElementById('av-colour').value.trim(),
+    notes: document.getElementById('av-notes').value.trim(),
+    addedAt: new Date().toLocaleString('en-GB'),
+    addedBy: user,
+  };
+  db.ref('fleet/vehicles/' + id).set(vehicle).then(() => {
+    document.getElementById('add-vehicle-modal').style.display = 'none';
+    audit('VEHICLE ADDED', `${reg} (${type}) added to fleet`, '');
+    showToast('VEHICLE ADDED — ' + reg, 'success');
+  });
+}
+
+function deleteVehicle(id, reg) {
+  if (!confirm(`Remove ${reg} from the fleet? All check history will be kept.`)) return;
+  db.ref('fleet/vehicles/' + id).remove().then(() => {
+    audit('VEHICLE REMOVED', `${reg} removed from fleet`, '');
+    showToast('VEHICLE REMOVED — ' + reg, 'warn');
+  });
+}
+
+function resolveDefect(vehicleId, checkId) {
+  db.ref('fleet/checks/' + checkId + '/resolved').set(true).then(() => {
+    showToast('DEFECT MARKED RESOLVED', 'success');
+    audit('DEFECT RESOLVED', `Defect on vehicle ${vehicleId} marked resolved`, '');
+  });
+}
+
+function showVehicleHistory(vehicleId, reg) {
+  const wrap = document.getElementById('fleet-history-wrap');
+  const list = document.getElementById('fleet-history-list');
+  const title = document.getElementById('fleet-history-title');
+  if (!wrap || !list) return;
+  title.textContent = `CHECK HISTORY — ${reg}`;
+  const checks = Object.values(fleetChecks)
+    .filter(c => c.vehicleId === vehicleId)
+    .sort((a,b) => (b.ts||0) - (a.ts||0))
+    .slice(0, 50);
+  if (!checks.length) {
+    list.innerHTML = `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:16px 0">NO CHECKS RECORDED FOR THIS VEHICLE YET</div>`;
+  } else {
+    list.innerHTML = checks.map(c => {
+      const allPass = !c.defects;
+      const col = c.severity === 'Do Not Use' ? '#ef4444' : c.severity === 'Action Required' ? '#fb923c' : c.defects ? '#fb923c' : '#00e676';
+      return `<div style="display:grid;grid-template-columns:160px 120px 100px 1fr auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border2);font-family:'Share Tech Mono',monospace;font-size:11px">
+        <div style="color:var(--muted)">${c.submittedAt}</div>
+        <div style="color:#a78bfa">${c.submittedBy}</div>
+        <div style="color:var(--muted)">📍 ${c.mileage||'—'} mi</div>
+        <div style="color:${col}">${c.defects||'ALL CLEAR'}</div>
+        <div style="font-size:9px;color:${c.resolved?'#00e676':col};white-space:nowrap">${c.defects?(c.resolved?'RESOLVED':c.severity.toUpperCase()):''}</div>
+      </div>`;
+    }).join('');
+  }
+  wrap.style.display = 'block';
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ---- CREW: fleet check form ----
+function openFleetCheckModal() {
+  const sel = document.getElementById('fc-vehicle');
+  const vehicles = Object.values(fleetVehicles);
+  if (!vehicles.length) { showToast('NO VEHICLES IN FLEET — CONTACT CONTROLLER', 'warn'); return; }
+  sel.innerHTML = '<option value="">— Select Vehicle —</option>' +
+    vehicles.map(v => `<option value="${v.id}">${v.reg} — ${v.type}</option>`).join('');
+
+  // Build check sections
+  const sections = document.getElementById('fc-sections');
+  sections.innerHTML = FLEET_CHECKS.map(s => `
+    <div style="margin-bottom:20px">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border2)">${s.icon} ${s.section}</div>
+      ${s.items.map((item, i) => {
+        const key = s.section.replace(/\s/g,'') + '_' + i;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <div style="font-size:13px;color:var(--text)">${item}</div>
+          <div style="display:flex;gap:10px;flex-shrink:0;margin-left:12px">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:10px;color:#00e676">
+              <input type="radio" name="fc_${key}" value="pass" checked> PASS
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:10px;color:#ef4444">
+              <input type="radio" name="fc_${key}" value="fail"> FAIL
+            </label>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  document.getElementById('fleet-check-modal').style.display = 'flex';
+}
+
+function submitFleetCheck() {
+  const vehicleId = document.getElementById('fc-vehicle').value;
+  const mileage = document.getElementById('fc-mileage').value.trim();
+  const defects = document.getElementById('fc-defects').value.trim();
+  const severity = document.querySelector('input[name="fc-severity"]:checked')?.value || 'Minor';
+
+  if (!vehicleId) { showToast('PLEASE SELECT A VEHICLE', 'warn'); return; }
+  if (!mileage) { showToast('MILEAGE READING IS REQUIRED', 'warn'); return; }
+
+  // Collect all check results
+  const results = {};
+  let failCount = 0;
+  FLEET_CHECKS.forEach(s => {
+    s.items.forEach((item, i) => {
+      const key = s.section.replace(/\s/g,'') + '_' + i;
+      const val = document.querySelector(`input[name="fc_${key}"]:checked`)?.value || 'pass';
+      results[key] = { item, result: val };
+      if (val === 'fail') failCount++;
+    });
+  });
+
+  const checkId = 'CHK-' + Date.now();
+  const vehicle = fleetVehicles[vehicleId];
+  const check = {
+    id: checkId,
+    vehicleId,
+    vehicleReg: vehicle?.reg || vehicleId,
+    submittedBy: user,
+    submittedAt: new Date().toLocaleString('en-GB'),
+    ts: Date.now(),
+    mileage,
+    results,
+    failCount,
+    defects: defects || null,
+    severity: defects ? severity : null,
+    resolved: false,
+  };
+
+  const btn = document.querySelector('#fleet-check-modal button[onclick="submitFleetCheck()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'SUBMITTING...'; }
+
+  db.ref('fleet/checks/' + checkId).set(check).then(() => {
+    document.getElementById('fleet-check-modal').style.display = 'none';
+    if (btn) { btn.disabled = false; btn.textContent = ' SUBMIT CHECK & SIGN OFF'; }
+    audit('FLEET CHECK SUBMITTED', `${vehicle?.reg} checked by ${user}${defects?' — DEFECT: '+defects:''}`, '');
+    if (defects && severity === 'Do Not Use') {
+      showToast('⚠️ CHECK SUBMITTED — VEHICLE GROUNDED, CONTROLLER NOTIFIED', 'warn');
+    } else if (defects) {
+      showToast('CHECK SUBMITTED — DEFECT NOTED', 'warn');
+    } else {
+      showToast('VEHICLE CHECK COMPLETE — ALL CLEAR', 'success');
+    }
+  }).catch(err => {
+    if (btn) { btn.disabled = false; btn.textContent = ' SUBMIT CHECK & SIGN OFF'; }
+    showToast('ERROR SUBMITTING — CHECK CONNECTION', 'warn');
+  });
 }
 
 // ======== CSV EXPORT ========
