@@ -1648,6 +1648,7 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
       <div class="section-title" style="margin-bottom:0">MY TASKS <span id="crew-name-tag"></span></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="openChangePasswordModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px"> CHANGE PASSWORD</button>
         <button onclick="openIncidentModal()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(239,68,68,0.5);color:var(--danger);cursor:pointer;letter-spacing:1px"> REPORT INCIDENT</button>
         <button onclick="openSectionGuide()" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:9px 16px;background:none;border:1px solid rgba(167,139,250,0.5);color:#a78bfa;cursor:pointer;letter-spacing:1px"> SECTION GUIDE</button>
       </div>
@@ -1742,6 +1743,27 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
       <button onclick="closeIncidentModal()" style="flex:1;padding:13px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer">CANCEL</button>
       <button onclick="submitIncidentReport()" style="flex:2;padding:13px;background:var(--danger);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> SUBMIT INCIDENT REPORT</button>
     </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="change-pw-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9970;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#2c3145;border:1px solid rgba(245,197,24,0.3);max-width:400px;width:100%;padding:26px 28px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#f5c518;letter-spacing:2px"> CHANGE PASSWORD</div>
+      <button onclick="closeChangePasswordModal()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:16px">LOGGED IN AS: <span id="cpw-username" style="color:#f5c518"></span></div>
+    <div class="f" style="margin-bottom:14px">
+      <div class="fl">New Password</div>
+      <input type="password" class="fi" id="cpw-new" placeholder="Enter new password (min 6 characters)">
+    </div>
+    <div class="f" style="margin-bottom:20px">
+      <div class="fl">Confirm New Password</div>
+      <input type="password" class="fi" id="cpw-confirm" placeholder="Repeat new password">
+    </div>
+    <div id="cpw-error" style="display:none;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--danger);margin-bottom:12px;letter-spacing:1px"></div>
+    <button onclick="submitChangePassword()" style="width:100%;padding:13px;background:#f5c518;color:#1a1e2e;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;border:none;cursor:pointer"> UPDATE PASSWORD</button>
   </div>
 </div>
 
@@ -5108,6 +5130,52 @@ function deleteLocation(key, idx) {
 }
 
 // Keep openLocationsManager pointing to showView for any old references
+function openChangePasswordModal() {
+  document.getElementById('cpw-username').textContent = auth.currentUser?.email || user;
+  document.getElementById('cpw-new').value = '';
+  document.getElementById('cpw-confirm').value = '';
+  document.getElementById('cpw-error').style.display = 'none';
+  document.getElementById('change-pw-modal').style.display = 'flex';
+}
+
+function closeChangePasswordModal() {
+  document.getElementById('change-pw-modal').style.display = 'none';
+}
+
+function submitChangePassword() {
+  const newPw = document.getElementById('cpw-new').value.trim();
+  const confirm = document.getElementById('cpw-confirm').value.trim();
+  const errEl = document.getElementById('cpw-error');
+
+  if (!newPw || newPw.length < 6) {
+    errEl.textContent = ' PASSWORD MUST BE AT LEAST 6 CHARACTERS';
+    errEl.style.display = 'block'; return;
+  }
+  if (newPw !== confirm) {
+    errEl.textContent = ' PASSWORDS DO NOT MATCH';
+    errEl.style.display = 'block'; return;
+  }
+
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#change-pw-modal button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = 'UPDATING...'; }
+
+  auth.currentUser.updatePassword(newPw).then(() => {
+    closeChangePasswordModal();
+    audit('PASSWORD CHANGED', `${user} changed own password`, '');
+    showToast('PASSWORD UPDATED SUCCESSFULLY', 'success');
+    if (btn) { btn.disabled = false; btn.textContent = ' UPDATE PASSWORD'; }
+  }).catch(err => {
+    if (btn) { btn.disabled = false; btn.textContent = ' UPDATE PASSWORD'; }
+    if (err.code === 'auth/requires-recent-login') {
+      errEl.textContent = ' SESSION EXPIRED — PLEASE LOG OUT AND BACK IN FIRST';
+    } else {
+      errEl.textContent = ' ERROR: ' + err.message;
+    }
+    errEl.style.display = 'block';
+  });
+}
+
 function openLocationsManager() { showView('locations'); }
 function addManualLocation() {}
 
@@ -5959,44 +6027,66 @@ function renderBookingStats() {
 function renderUsersView() {
   const list = document.getElementById('users-list');
   if (!list) return;
+  const currentEmail = auth.currentUser?.email || '';
   db.ref('users').once('value', snap => {
     const users = snap.val() || {};
     const roleCol = { controller:'#fb923c', crew:'#a78bfa' };
-    list.innerHTML = Object.entries(users).map(([username, u]) => `
-      <div style="background:var(--surface);border:1px solid var(--border2);padding:16px 18px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-bright)">${u.displayName}</div>
-            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid ${roleCol[u.role]||'#8a94b8'};color:${roleCol[u.role]||'#8a94b8'}">${(u.role||'crew').toUpperCase()}</div>
-          </div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px">USERNAME: ${username} &nbsp;|&nbsp; LOGIN: ${username}@citadelsecure.app</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input class="fi" id="pw-${username}" type="password" placeholder="New password (min 6 chars)" style="max-width:220px;font-size:12px;padding:7px 10px">
-            <button onclick="changePassword('${username}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px;white-space:nowrap">CHANGE PASSWORD</button>
-          </div>
+    list.innerHTML = Object.entries(users).map(([username, u]) => {
+      const isMe = currentEmail === username + '@citadelsecure.app';
+      return `<div style="background:var(--surface);border:1px solid ${isMe?'rgba(245,197,24,0.3)':'var(--border2)'};padding:16px 18px;margin-bottom:8px;border-left:3px solid ${isMe?'#f5c518':'var(--border2)'}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text-bright)">${u.displayName}</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;border:1px solid ${roleCol[u.role]||'#8a94b8'};color:${roleCol[u.role]||'#8a94b8'}">${(u.role||'crew').toUpperCase()}</div>
+          ${isMe?'<div style="font-family:\'Share Tech Mono\',monospace;font-size:9px;padding:2px 8px;background:rgba(245,197,24,0.15);color:#f5c518"> YOU</div>':''}
         </div>
-        <div>
-          ${username !== user.toLowerCase().replace(/\s/g,'') && u.displayName !== user ?
-            `<button onclick="deleteUser('${username}','${u.displayName}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button>` :
-            `<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted)">YOU</div>`}
+        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:10px">USERNAME: ${username} &nbsp;|&nbsp; ${username}@citadelsecure.app</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <input class="fi" id="pw-${username}" type="password" placeholder="${isMe?'Enter new password (min 6 chars)':'Set new password for this user'}" style="max-width:240px;font-size:12px;padding:7px 10px">
+          <button onclick="changePassword('${username}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:${isMe?'rgba(245,197,24,0.15)':'none'};border:1px solid rgba(245,197,24,0.4);color:#f5c518;cursor:pointer;letter-spacing:1px;white-space:nowrap">${isMe?'CHANGE MY PASSWORD':'RESET PASSWORD'}</button>
+          ${!isMe?`<button onclick="deleteUser('${username}','${u.displayName}')" style="font-family:'Share Tech Mono',monospace;font-size:10px;padding:7px 14px;background:none;border:1px solid rgba(255,59,59,0.3);color:var(--danger);cursor:pointer;letter-spacing:1px">DELETE</button>`:''}
         </div>
-      </div>`).join('') || `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO USERS FOUND — ADD USERS BELOW</div>`;
+        ${!isMe?`<div id="pw-note-${username}" style="display:none;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.3);padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#fb923c;line-height:1.8;margin-top:4px"> TO APPLY: go to console.firebase.google.com → Authentication → find ${username}@citadelsecure.app → three dots → Edit user → enter new password.</div>`:''}
+      </div>`;
+    }).join('') || `<div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);padding:20px 0">NO USERS FOUND — ADD USERS BELOW</div>`;
   });
 }
 
 function changePassword(username) {
   const newPw = document.getElementById('pw-' + username)?.value?.trim();
   if (!newPw || newPw.length < 6) { showToast('PASSWORD MUST BE AT LEAST 6 CHARACTERS', 'warn'); return; }
-  // Use Firebase Admin via a Cloud Function — or for now update via re-auth
-  // Since we can't call Admin SDK from client, we use a workaround:
-  // Sign in as that user temporarily to update their password
-  const email = username + '@citadelsecure.app';
-  showToast('PASSWORD UPDATED — USER MUST LOG IN AGAIN TO USE NEW PASSWORD', 'success');
-  // Store new password request in Firebase for admin processing
-  db.ref('passwordResets/' + username).set({ newPassword: newPw, requestedAt: new Date().toLocaleString('en-GB'), requestedBy: user });
-  document.getElementById('pw-' + username).value = '';
-  // Note: Full password reset requires Firebase Admin SDK (server-side)
-  // For now this logs the request — see setup instructions
+
+  const currentUsername = user.toLowerCase().replace(/\s/g,'').replace(/[^a-z0-9]/g,'');
+  // Check if changing own password - need to figure out current user's username
+  const currentEmail = auth.currentUser?.email;
+  const targetEmail = username + '@citadelsecure.app';
+
+  if (currentEmail === targetEmail) {
+    // Changing own password — works directly
+    auth.currentUser.updatePassword(newPw).then(() => {
+      document.getElementById('pw-' + username).value = '';
+      audit('PASSWORD CHANGED', `${user} changed own password`, '');
+      showToast('YOUR PASSWORD HAS BEEN UPDATED', 'success');
+    }).catch(err => {
+      if (err.code === 'auth/requires-recent-login') {
+        showToast('SESSION EXPIRED — PLEASE LOG OUT AND BACK IN FIRST', 'warn');
+      } else {
+        showToast('ERROR: ' + err.message, 'warn');
+      }
+    });
+  } else {
+    // Changing another user's password — not possible from client SDK without re-auth
+    // Store the request and show instructions
+    db.ref('passwordResets/' + username).set({
+      newPassword: newPw,
+      requestedAt: new Date().toLocaleString('en-GB'),
+      requestedBy: user
+    });
+    document.getElementById('pw-' + username).value = '';
+    showToast('PASSWORD RESET REQUESTED — SEE INSTRUCTIONS BELOW', 'warn');
+    // Show instructions
+    const el = document.getElementById('pw-note-' + username);
+    if (el) el.style.display = 'block';
+  }
 }
 
 function deleteUser(username, displayName) {
